@@ -5,6 +5,9 @@
 <title>Programming Tools Reviewer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+  /* =========================================================
+     THEME — preserved dark terminal identity, green accent
+  ========================================================= */
   :root{
     --bg:#0d1117;
     --panel:#131a24;
@@ -17,6 +20,7 @@
     --bad:#ff6b6b;
     --bad-dim:#5c2626;
     --amber:#f0b64c;
+    --blue:#5aa9ff;
     --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     --sans: 'IBM Plex Sans', -apple-system, Segoe UI, Roboto, sans-serif;
   }
@@ -33,8 +37,20 @@
   }
   ::selection{background:var(--accent-dim);}
 
+  /* focus-visible everywhere — accessibility requirement */
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+  .visually-hidden{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  /* ---------- sidebar ---------- */
   #sidebar{
-    width:270px; flex:0 0 270px;
+    width:280px; flex:0 0 280px;
     background:var(--panel);
     border-right:1px solid var(--line);
     padding:20px 16px 16px;
@@ -46,85 +62,136 @@
   .prompt-line{font-family:var(--mono); font-size:12px; color:var(--dim); display:flex; gap:6px; align-items:center;}
   .prompt-line .caret{color:var(--accent); animation:blink 1.1s step-end infinite;}
   @keyframes blink{ 50%{opacity:0;} }
+  @media (prefers-reduced-motion:reduce){ .prompt-line .caret{animation:none;} }
+
+  #validationBanner{
+    display:none; background:rgba(255,107,107,0.1); border:1px solid var(--bad-dim); color:var(--bad);
+    border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:11.5px; line-height:1.5;
+  }
+  #validationBanner.show{display:block;}
+  #validationBanner ul{margin:6px 0 0; padding-left:18px;}
+  #validationBanner button{
+    margin-top:8px; background:transparent; border:1px solid var(--bad); color:var(--bad);
+    font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:6px; cursor:pointer;
+  }
 
   #quizSelectWrap{display:flex; flex-direction:column; gap:4px;}
   #quizSelectWrap label{font-family:var(--mono); font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em;}
-  select#quizSelect{
+  select, .selectLike{
     background:#0a0f16; color:var(--text); border:1px solid var(--line);
     border-radius:6px; padding:9px 10px; font-family:var(--mono); font-size:13px;
   }
 
-  #scoreWrap{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:12px;}
-  #scoreWrap .row{display:flex; justify-content:space-between; margin-bottom:4px;}
-  #scoreWrap .row:last-child{margin-bottom:0;}
-  #scoreWrap .val{color:var(--accent);}
+  fieldset.groupBox{border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:0;}
+  fieldset.groupBox legend{
+    font-family:var(--mono); font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; padding:0 4px;
+  }
+  .modeRow{display:flex; gap:6px; margin-top:6px;}
+  .modeBtn{
+    flex:1; background:var(--panel-2); border:1px solid var(--line); color:var(--dim);
+    font-family:var(--mono); font-size:11px; padding:8px 4px; border-radius:6px; cursor:pointer; text-align:center;
+  }
+  .modeBtn[aria-pressed="true"]{background:rgba(57,217,138,0.14); border-color:var(--accent); color:var(--accent); font-weight:700;}
+  .modeDesc{font-family:var(--mono); font-size:10.5px; color:var(--dim); margin-top:6px; line-height:1.4;}
+
+  .settingRow{display:flex; align-items:center; gap:8px; margin-top:8px; font-family:var(--mono); font-size:12px;}
+  .settingRow input[type="checkbox"]{accent-color:var(--accent); width:15px; height:15px;}
+
+  #progressWrap{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:12px;}
   #progressBarOuter{height:6px; background:#0a0f16; border-radius:4px; overflow:hidden; margin-top:8px; border:1px solid var(--line);}
   #progressBarInner{height:100%; width:0%; background:linear-gradient(90deg,var(--accent-dim),var(--accent)); transition:width .25s ease;}
 
-  #navGrid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; overflow-y:auto;}
+  #navToggleBtn{display:none;}
+  #navGrid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; overflow-y:auto; max-height:260px;}
   .navBtn{
     aspect-ratio:1/1; border:1px solid var(--line); background:var(--panel-2); color:var(--dim);
-    font-family:var(--mono); font-size:12px; border-radius:6px;
+    font-family:var(--mono); font-size:11px; border-radius:6px;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
-    transition:all .15s ease;
+    transition:all .15s ease; position:relative; padding:0;
   }
   .navBtn:hover{border-color:var(--accent); color:var(--text);}
-  .navBtn.picked{background:rgba(240,182,76,0.1); color:var(--amber); border-color:rgba(240,182,76,0.4);}
+  .navBtn.answered{background:rgba(57,217,138,0.1); color:var(--accent); border-color:var(--accent-dim);}
   .navBtn.current{outline:2px solid var(--accent); outline-offset:1px;}
   .navBtn.correct{background:rgba(57,217,138,0.18); color:var(--accent); border-color:var(--accent);}
   .navBtn.incorrect{background:rgba(255,107,107,0.15); color:var(--bad); border-color:var(--bad);}
+  .navBtn .bmDot{position:absolute; top:2px; right:2px; width:5px; height:5px; border-radius:50%; background:var(--amber);}
 
-  #retakeSidebarBtn{
-    margin-top:auto; background:var(--panel-2); color:var(--text); border:1px solid var(--line);
-    font-family:var(--mono); font-weight:600; font-size:12.5px; letter-spacing:.03em;
-    padding:11px; border-radius:8px; cursor:pointer; text-transform:uppercase;
+  #finishBtn{
+    margin-top:auto; background:var(--accent); color:#0a1510; border:none;
+    font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:.03em;
+    padding:12px; border-radius:8px; cursor:pointer; text-transform:uppercase;
   }
-  #retakeSidebarBtn:hover{border-color:var(--accent); color:var(--accent);}
+  #finishBtn:hover{filter:brightness(1.08);}
 
+  /* ---------- main ---------- */
   #main{flex:1; padding:36px 48px 80px; max-width:900px; margin:0 auto;}
-  .qMeta{font-family:var(--mono); font-size:12px; color:var(--dim); display:flex; justify-content:space-between; margin-bottom:10px;}
+  .qMeta{font-family:var(--mono); font-size:12px; color:var(--dim); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px; align-items:center;}
+  .qMeta .tags{display:flex; gap:6px; flex-wrap:wrap;}
   .qMeta .tag{color:var(--amber); border:1px solid var(--line); padding:2px 8px; border-radius:20px;}
+  .qMeta .tag.topic{color:var(--blue);}
+  .qMeta .tag.diff{color:var(--dim);}
+  #bookmarkBtn{
+    background:transparent; border:1px solid var(--line); color:var(--dim); border-radius:6px;
+    font-family:var(--mono); font-size:12px; padding:5px 10px; cursor:pointer;
+  }
+  #bookmarkBtn[aria-pressed="true"]{border-color:var(--amber); color:var(--amber); background:rgba(240,182,76,0.1);}
+
   .qStem{font-size:17px; line-height:1.6; white-space:pre-wrap; margin-bottom:14px;}
   pre.code{
     background:#0a0f16; border:1px solid var(--line); border-left:3px solid var(--accent-dim);
     border-radius:6px; padding:16px 18px; font-family:var(--mono); font-size:13.5px;
     line-height:1.55; overflow-x:auto; color:#b9e6cd; margin:0 0 18px;
   }
-  .hint{font-family:var(--mono); font-size:11.5px; color:var(--dim); margin:-6px 0 14px;}
+  .hint{font-family:var(--mono); font-size:11.5px; color:var(--dim); margin:-6px 0 14px; display:flex; justify-content:space-between;}
   .flagNote{
     font-family:var(--mono); font-size:11.5px; color:var(--amber);
     background:rgba(240,182,76,0.08); border:1px solid rgba(240,182,76,0.3);
     border-radius:6px; padding:8px 10px; margin:-6px 0 14px;
   }
+  .sourceNote{font-family:var(--mono); font-size:10.5px; color:var(--dim); margin:-8px 0 16px;}
 
-  .choiceList{display:flex; flex-direction:column; gap:8px; margin-bottom:16px;}
+  .choiceList{display:flex; flex-direction:column; gap:8px; margin-bottom:8px;}
   .choice{
     display:flex; gap:12px; align-items:flex-start; background:var(--panel);
     border:1px solid var(--line); border-radius:8px; padding:12px 14px; cursor:pointer;
     transition:border-color .15s ease, background .15s ease;
   }
   .choice:hover{border-color:var(--accent-dim);}
-  .choice input{margin-top:3px; accent-color:var(--accent);}
+  .choice input{margin-top:3px; accent-color:var(--accent); width:16px; height:16px; flex-shrink:0;}
   .choice .txt{white-space:pre-wrap; font-size:14.5px; line-height:1.5;}
+  .choice .kbdHint{font-family:var(--mono); font-size:10.5px; color:var(--dim); border:1px solid var(--line); border-radius:4px; padding:0 5px; flex-shrink:0;}
   .choice.selected{border-color:var(--accent); background:rgba(57,217,138,0.06);}
   .choice.showCorrect{border-color:var(--accent); background:rgba(57,217,138,0.14);}
+  .choice.showCorrect .txt::after{content:" ✓ correct answer"; color:var(--accent); font-family:var(--mono); font-size:11px;}
   .choice.showWrong{border-color:var(--bad); background:rgba(255,107,107,0.1);}
-  .choice.locked{cursor:default;}
+  .choice.showWrong .txt::after{content:" ✕ your answer"; color:var(--bad); font-family:var(--mono); font-size:11px;}
+  .choice.disabledLimit{opacity:.4; cursor:not-allowed;}
 
-  #submitRow{margin-bottom:6px;}
-  #submitBtn{
-    font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:.03em;
-    padding:11px 22px; border-radius:8px; border:none;
-    background:var(--accent); color:#0a1510; cursor:pointer; text-transform:uppercase;
-  }
-  #submitBtn:hover{filter:brightness(1.08);}
-  #submitBtn:disabled{opacity:.35; cursor:not-allowed; filter:none;}
-
-  #feedbackBox{margin-top:4px; margin-bottom:8px; padding:12px 14px; border-radius:8px; font-family:var(--mono); font-size:13px; display:none;}
+  #feedbackBox{margin-top:16px; padding:12px 14px; border-radius:8px; font-family:var(--mono); font-size:13px; display:none;}
   #feedbackBox.ok{display:block; background:rgba(57,217,138,0.1); border:1px solid var(--accent-dim); color:var(--accent);}
   #feedbackBox.bad{display:block; background:rgba(255,107,107,0.08); border:1px solid var(--bad-dim); color:var(--bad);}
+  #feedbackBox .fbHead{font-weight:700; margin-bottom:6px;}
+  #feedbackBox .fbExplain{color:var(--text); font-family:var(--sans); font-size:13.5px; line-height:1.55; margin-top:8px;}
+  #feedbackBox .fbExplain b{color:var(--accent);}
+  #feedbackBox .revealBtn{
+    margin-top:8px; background:transparent; border:1px solid currentColor; color:inherit;
+    font-family:var(--mono); font-size:11px; padding:5px 10px; border-radius:6px; cursor:pointer;
+  }
 
-  .navRow{display:flex; justify-content:space-between; margin-top:22px; gap:12px;}
+  .actionRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+  .actionRow button{
+    font-family:var(--mono); font-size:12.5px; padding:9px 16px; border-radius:8px;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--text); cursor:pointer;
+  }
+  .actionRow button:hover{border-color:var(--accent);}
+  .actionRow button.tryAgain{border-color:var(--bad); color:var(--bad);}
+  .actionRow button.tryAgain:hover{background:rgba(255,107,107,0.08);}
+  .actionRow button.submitBtn{background:var(--accent); color:#0a1510; border:none; font-weight:700;}
+  .actionRow button.submitBtn:disabled{opacity:.35; cursor:not-allowed; background:var(--panel-2); color:var(--dim);}
+
+  .attemptsNote{font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:6px;}
+
+  .navRow{display:flex; justify-content:space-between; margin-top:28px; gap:12px;}
   .navRow button{
     font-family:var(--mono); font-size:13px; padding:11px 20px; border-radius:8px;
     border:1px solid var(--line); background:var(--panel-2); color:var(--text); cursor:pointer;
@@ -132,34 +199,79 @@
   .navRow button:hover{border-color:var(--accent);}
   .navRow button:disabled{opacity:.35; cursor:not-allowed;}
 
+  /* ---------- results ---------- */
   #resultsScreen{display:none;}
   .scoreCard{
     text-align:center; background:var(--panel); border:1px solid var(--line);
-    border-radius:14px; padding:48px 32px; margin-bottom:24px;
+    border-radius:14px; padding:40px 32px; margin-bottom:24px;
   }
-  .scoreCard .big{font-family:var(--mono); font-size:64px; font-weight:700; color:var(--accent);}
+  .scoreCard .big{font-family:var(--mono); font-size:60px; font-weight:700; color:var(--accent);}
   .scoreCard .sub{color:var(--dim); font-family:var(--mono); font-size:13px; margin-top:6px;}
-  .resultsGrid{display:grid; grid-template-columns:repeat(10,1fr); gap:6px; margin-bottom:28px;}
+  .scoreCard .accSub{color:var(--blue); font-family:var(--mono); font-size:12.5px; margin-top:4px;}
+  .scoreCard .perfMsg{font-size:14.5px; margin-top:14px; color:var(--text);}
+
+  .statCardsGrid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px;}
+  .statCard{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center;}
+  .statCard .v{font-family:var(--mono); font-size:20px; font-weight:700;}
+  .statCard.correct .v{color:var(--accent);}
+  .statCard.incorrect .v{color:var(--bad);}
+  .statCard.unanswered .v{color:var(--amber);}
+  .statCard .l{font-family:var(--mono); font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.05em; margin-top:2px;}
+
+  .historyRow{display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap;}
+  .historyChip{
+    flex:1; min-width:120px; background:var(--panel-2); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; font-family:var(--mono); text-align:center;
+  }
+  .historyChip .v{font-size:16px; font-weight:700; color:var(--text);}
+  .historyChip .l{font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.05em;}
+
+  .sectionLabel{font-family:var(--mono); font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; margin:22px 0 10px;}
+  .topicRow{display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12.5px; margin-bottom:8px;}
+  .topicRow .name{flex:0 0 180px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .topicBarOuter{flex:1; height:8px; background:#0a0f16; border:1px solid var(--line); border-radius:5px; overflow:hidden;}
+  .topicBarInner{height:100%; background:linear-gradient(90deg,var(--accent-dim),var(--accent));}
+  .topicRow .frac{flex:0 0 52px; text-align:right; color:var(--dim);}
+
+  .missedItem{
+    font-family:var(--mono); font-size:12px; color:var(--dim); background:var(--panel-2);
+    border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:6px;
+    display:flex; justify-content:space-between; gap:10px; cursor:pointer;
+  }
+  .missedItem:hover{border-color:var(--bad);}
+  .missedItem .cnt{color:var(--bad); flex-shrink:0;}
+
+  .resultsGrid{display:grid; grid-template-columns:repeat(10,1fr); gap:6px; margin:16px 0 24px;}
   .rBox{
     aspect-ratio:1/1; border-radius:5px; font-family:var(--mono); font-size:11px;
     display:flex; align-items:center; justify-content:center; cursor:pointer; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--dim);
   }
   .rBox.correct{background:rgba(57,217,138,0.18); color:var(--accent); border-color:var(--accent);}
   .rBox.incorrect{background:rgba(255,107,107,0.15); color:var(--bad); border-color:var(--bad);}
-  .rBox.unattempted{background:var(--panel-2); color:var(--dim); border-color:var(--line);}
-  .actionsRow{display:flex; gap:12px; justify-content:center;}
+  .rBox.unanswered{background:rgba(240,182,76,0.12); color:var(--amber); border-color:var(--amber); border-style:dashed;}
+
+  .actionsRow{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
   .actionsRow button{
-    font-family:var(--mono); font-size:13px; padding:12px 22px; border-radius:8px;
+    font-family:var(--mono); font-size:12.5px; padding:12px 18px; border-radius:8px;
     border:1px solid var(--line); background:var(--panel-2); color:var(--text); cursor:pointer;
   }
   .actionsRow button.primary{background:var(--accent); color:#0a1510; border:none; font-weight:700;}
+  .actionsRow button.danger{border-color:var(--bad); color:var(--bad);}
 
   @media(max-width:820px){
     body{flex-direction:column;}
     #sidebar{position:relative; width:100%; height:auto; flex:none;}
-    #navGrid{max-height:180px;}
-    #main{padding:24px 18px 60px;}
+    #navToggleBtn{
+      display:block; width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+      font-family:var(--mono); font-size:12px; padding:9px; border-radius:6px; cursor:pointer;
+    }
+    #navGrid{display:none; max-height:220px;}
+    #navGrid.open{display:grid;}
+    #main{padding:22px 16px 60px;}
     .resultsGrid{grid-template-columns:repeat(6,1fr);}
+    .statCardsGrid{grid-template-columns:repeat(2,1fr);}
+    .topicRow .name{flex-basis:110px;}
   }
 </style>
 </head>
@@ -170,22 +282,46 @@
     <div class="brand">// programming_tools.py</div>
     <div class="brand-sub" id="brandTitle">Programming Tools Reviewer</div>
   </div>
-  <div class="prompt-line"><span id="loadedCount">0</span> questions loaded<span class="caret">_</span></div>
+  <div class="prompt-line"><span id="loadedCount">0</span> questions loaded<span class="caret" aria-hidden="true">_</span></div>
+
+  <div id="validationBanner" role="alert">
+    <strong>⚠ Quiz data validation issues found:</strong>
+    <ul id="validationList"></ul>
+    <button id="dismissValidation" type="button">Dismiss</button>
+  </div>
 
   <div id="quizSelectWrap">
     <label for="quizSelect">Active Quiz</label>
     <select id="quizSelect"></select>
   </div>
 
-  <div id="scoreWrap">
-    <div class="row"><span>CHECKED</span><span class="val" id="checkedText">0 / 0</span></div>
-    <div class="row"><span>CORRECT</span><span class="val" id="correctText">0</span></div>
+  <fieldset class="groupBox">
+    <legend>Mode</legend>
+    <div class="modeRow" role="group" aria-label="Quiz mode">
+      <button type="button" class="modeBtn" data-mode="study" aria-pressed="false">Study</button>
+      <button type="button" class="modeBtn" data-mode="practice" aria-pressed="false">Practice</button>
+      <button type="button" class="modeBtn" data-mode="exam" aria-pressed="false">Exam</button>
+    </div>
+    <div class="modeDesc" id="modeDesc"></div>
+  </fieldset>
+
+  <fieldset class="groupBox">
+    <legend>Settings</legend>
+    <label class="settingRow"><input type="checkbox" id="shuffleQToggle"> Shuffle questions</label>
+    <label class="settingRow"><input type="checkbox" id="shuffleCToggle"> Shuffle choices</label>
+  </fieldset>
+
+  <div id="progressWrap">
+    <div style="display:flex;justify-content:space-between;">
+      <span>ANSWERED</span><span id="progressText">0 / 0</span>
+    </div>
     <div id="progressBarOuter"><div id="progressBarInner"></div></div>
   </div>
 
-  <div id="navGrid"></div>
+  <button id="navToggleBtn" type="button" aria-expanded="false" aria-controls="navGrid">Show question navigator ▾</button>
+  <div id="navGrid" role="group" aria-label="Question navigator"></div>
 
-  <button id="retakeSidebarBtn">↺ Reset Quiz</button>
+  <button id="finishBtn" type="button">Grade Quiz ▸</button>
 </div>
 
 <div id="main">
@@ -193,22 +329,24 @@
   <div id="quizScreen">
     <div class="qMeta">
       <span id="qCounter">Question 1 / 10</span>
-      <span class="tag" id="qTypeTag">SINGLE</span>
+      <div class="tags">
+        <span class="tag" id="qTypeTag">SINGLE</span>
+        <span class="tag topic" id="qTopicTag">Topic</span>
+        <span class="tag diff" id="qDiffTag">Easy</span>
+      </div>
+      <button id="bookmarkBtn" type="button" aria-pressed="false">☆ Bookmark <span class="visually-hidden">this question</span></button>
     </div>
 
     <div class="qStem" id="qStem"></div>
     <pre class="code" id="qCode" style="display:none;"></pre>
-    <div id="qFlag" class="flagNote" style="display:none;"></div>
+    <div id="qFlag" class="flagNote" style="display:none;" role="note"></div>
     <div id="qBody"></div>
-
-    <div id="submitRow">
-      <button id="submitBtn" disabled>Submit Answer</button>
-    </div>
-    <div id="feedbackBox"></div>
+    <div id="feedbackBox" role="status" aria-live="polite"></div>
+    <div class="actionRow" id="actionRow"></div>
 
     <div class="navRow">
-      <button id="prevBtn">◂ Previous</button>
-      <button id="nextBtn">Next ▸</button>
+      <button id="prevBtn" type="button">◂ Previous</button>
+      <button id="nextBtn" type="button">Next ▸</button>
     </div>
   </div>
 
@@ -216,426 +354,1239 @@
     <div class="scoreCard">
       <div class="big" id="scoreBig">0%</div>
       <div class="sub" id="scoreSub">0 of 0 correct</div>
+      <div class="accSub" id="accSub">Attempted accuracy: 0%</div>
+      <div class="perfMsg" id="perfMsg"></div>
     </div>
+
+    <div class="statCardsGrid">
+      <div class="statCard correct"><div class="v" id="statCorrect">0</div><div class="l">Correct</div></div>
+      <div class="statCard incorrect"><div class="v" id="statIncorrect">0</div><div class="l">Incorrect</div></div>
+      <div class="statCard unanswered"><div class="v" id="statUnanswered">0</div><div class="l">Unanswered</div></div>
+      <div class="statCard"><div class="v" id="statAttempts">0</div><div class="l">Attempts</div></div>
+    </div>
+
+    <div class="historyRow">
+      <div class="historyChip"><div class="v" id="prevScoreVal">—</div><div class="l">Previous Score</div></div>
+      <div class="historyChip"><div class="v" id="bestScoreVal">—</div><div class="l">Best Score</div></div>
+    </div>
+
+    <div class="sectionLabel">Topic Breakdown</div>
+    <div id="topicBreakdown"></div>
+
+    <div class="sectionLabel" id="missedLabel" style="display:none;">Frequently Missed</div>
+    <div id="missedList"></div>
+
+    <div class="sectionLabel">All Questions</div>
     <div class="resultsGrid" id="resultsGrid"></div>
+
     <div class="actionsRow">
-      <button class="primary" id="backToQuizBtn">Back to Quiz</button>
-      <button id="retakeBtn">Retake Quiz</button>
+      <button class="primary" id="reviewWrongBtn" type="button">Review Incorrect</button>
+      <button id="reviewUnansweredBtn" type="button">Review Unanswered</button>
+      <button id="retryIncorrectBtn" type="button">Retry Incorrect Only</button>
+      <button id="returnToQuizBtn" type="button">Return to Quiz</button>
+      <button class="danger" id="retakeBtn" type="button">Retake Entire Quiz</button>
     </div>
   </div>
 
 </div>
 
 <script>
+(function(){
+'use strict';
+
 /* =========================================================
-   QUESTION DATA — Programming Tools Reviewer
-   (checked for duplicate questions across all sets — none found)
+   1. QUESTION DATA
+   (ids, topic, difficulty, source, and explain added;
+    original stems, options, and answer keys unchanged)
 ========================================================= */
 const QUIZZES = {
 
 "1732168": {
   title: "Quiz 1732168 — IDEs & VS Code Tools",
   questions: [
-{q:1,type:"single",stem:"Debuggers allow developers to step through code line by line to find errors.",
- opts:[["A","True"],["B","False"]], ans:"A"},
+{id:"ide-01",q:1,type:"single",topic:"Debugging",difficulty:"Easy",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"Debuggers allow developers to step through code line by line to find errors.",
+ opts:[["A","True"],["B","False"]], ans:"A",
+ explain:"Debuggers let you pause and step through code line by line to inspect variable state and locate errors."},
 
-{q:2,type:"single",stem:"Which VS Code feature helps programmers by suggesting code completions?",
- opts:[["A","Debugger"],["B","Breakpoints"],["C","Snippets"],["D","IntelliSense"]], ans:"D"},
+{id:"ide-02",q:2,type:"single",topic:"VS Code Features",difficulty:"Easy",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"Which VS Code feature helps programmers by suggesting code completions?",
+ opts:[["A","Debugger"],["B","Breakpoints"],["C","Snippets"],["D","IntelliSense"]], ans:"D",
+ explain:"IntelliSense is VS Code's smart code-completion feature that suggests methods, variables, and syntax as you type."},
 
-{q:3,type:"single",stem:"All IDEs come with built-in version control and API testing features.",
- opts:[["A","False"],["B","True"]], ans:"A"},
+{id:"ide-03",q:3,type:"single",topic:"IDE Basics",difficulty:"Medium",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"All IDEs come with built-in version control and API testing features.",
+ opts:[["A","False"],["B","True"]], ans:"A",
+ explain:"Not all IDEs ship with built-in version control or API testing — many rely on extensions or external tools for those features."},
 
-{q:4,type:"single",stem:"Which programming tool helps enforce coding standards automatically?",
- opts:[["A","Debugger"],["B","Compiler"],["C","Interpreter"],["D","Prettier"]], ans:"D"},
+{id:"ide-04",q:4,type:"single",topic:"Coding Standards",difficulty:"Easy",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"Which programming tool helps enforce coding standards automatically?",
+ opts:[["A","Debugger"],["B","Compiler"],["C","Interpreter"],["D","Prettier"]], ans:"D",
+ explain:"Prettier is an automatic code formatter that enforces consistent style rules across a codebase."},
 
-{q:5,type:"single",stem:"Breakpoints in an IDE are used for:",
+{id:"ide-05",q:5,type:"single",topic:"Debugging",difficulty:"Easy",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"Breakpoints in an IDE are used for:",
  opts:[["A","Formatting code automatically"],["B","Improving code readability"],
-       ["C","Running code without compiling"],["D","Pausing program execution during debugging"]], ans:"D"},
+       ["C","Running code without compiling"],["D","Pausing program execution during debugging"]], ans:"D",
+ explain:"Breakpoints pause program execution at a specific line so you can inspect the program's state during debugging."},
 
-{q:6,type:"single",stem:"What is the primary purpose of an IDE?",
+{id:"ide-06",q:6,type:"single",topic:"IDE Basics",difficulty:"Medium",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"What is the primary purpose of an IDE?",
  opts:[["A","To manage cloud deployments"],["B","To replace version control tools like Git"],
        ["C","To compile code only"],
-       ["D","To provide a complete environment for writing, testing, and debugging programs"]], ans:"D"},
+       ["D","To provide a complete environment for writing, testing, and debugging programs"]], ans:"D",
+ explain:"An IDE bundles an editor, debugger, build tools, and other utilities into one environment for writing, testing, and debugging code."},
 
-{q:7,type:"single",stem:"The Prettier extension is mainly used for:",
+{id:"ide-07",q:7,type:"single",topic:"VS Code Features",difficulty:"Easy",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"The Prettier extension is mainly used for:",
  opts:[["A","Managing Git repositories"],["B","Running live servers"],
-       ["C","Code formatting"],["D","Debugging JavaScript"]], ans:"C"},
+       ["C","Code formatting"],["D","Debugging JavaScript"]], ans:"C",
+ explain:"Prettier's core job is formatting code consistently, not debugging or managing repositories."},
 
-{q:8,type:"single",stem:"Which of the following is NOT a feature of an Integrated Development Environment (IDE)?",
+{id:"ide-08",q:8,type:"single",topic:"IDE Basics",difficulty:"Medium",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"Which of the following is NOT a feature of an Integrated Development Environment (IDE)?",
  opts:[["A","Version control system"],["B","Code editor"],
-       ["C","Debugger"],["D","File explorer"]], ans:"A"},
+       ["C","Debugger"],["D","File explorer"]], ans:"A",
+ explain:"Version control (like Git) is a separate tool; IDEs typically integrate with it rather than including it natively as a core feature."},
 
-{q:9,type:"single",stem:"If a developer wants to run and preview a web page instantly inside VS Code, which extension is best?",
- opts:[["A","Prettier"],["B","REST Client"],["C","Docker"],["D","Live Server"]], ans:"D"},
+{id:"ide-09",q:9,type:"single",topic:"VS Code Features",difficulty:"Easy",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"If a developer wants to run and preview a web page instantly inside VS Code, which extension is best?",
+ opts:[["A","Prettier"],["B","REST Client"],["C","Docker"],["D","Live Server"]], ans:"D",
+ explain:"Live Server spins up a local development server with auto-refresh, ideal for previewing web pages instantly."},
 
-{q:10,type:"single",stem:"An IDE combines editing, debugging, and project management tools in one application.",
- opts:[["A","True"],["B","False"]], ans:"A"},
+{id:"ide-10",q:10,type:"single",topic:"IDE Basics",difficulty:"Easy",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"An IDE combines editing, debugging, and project management tools in one application.",
+ opts:[["A","True"],["B","False"]], ans:"A",
+ explain:"That's the definition of an IDE — a single application combining editing, debugging, and project management."},
 
-{q:11,type:"single",stem:"A linter is a tool used to optimize program performance.",
- opts:[["A","False"],["B","True"]], ans:"A"},
+{id:"ide-11",q:11,type:"single",topic:"Coding Standards",difficulty:"Medium",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"A linter is a tool used to optimize program performance.",
+ opts:[["A","False"],["B","True"]], ans:"A",
+ explain:"A linter checks code for style and potential errors; it doesn't optimize runtime performance."},
 
-{q:12,type:"single",stem:"Which extension allows you to automatically check and fix JavaScript/TypeScript code style issues?",
- opts:[["A","Prettier"],["B","Docker"],["C","ESLint"],["D","GitLens"]], ans:"C"},
+{id:"ide-12",q:12,type:"single",topic:"Coding Standards",difficulty:"Medium",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"Which extension allows you to automatically check and fix JavaScript/TypeScript code style issues?",
+ opts:[["A","Prettier"],["B","Docker"],["C","ESLint"],["D","GitLens"]], ans:"C",
+ explain:"ESLint analyzes JavaScript/TypeScript code and can automatically fix style and syntax issues."},
 
-{q:13,type:"single",stem:"Extensions in VS Code can add features such as syntax highlighting, linting, or language support.",
- opts:[["A","True"],["B","False"]], ans:"A"}
+{id:"ide-13",q:13,type:"single",topic:"VS Code Features",difficulty:"Easy",source:"Quiz 1732168 — IDEs & VS Code Tools",
+ stem:"Extensions in VS Code can add features such as syntax highlighting, linting, or language support.",
+ opts:[["A","True"],["B","False"]], ans:"A",
+ explain:"VS Code's extension marketplace lets you add syntax highlighting, linters, language support, and more."}
   ]
 },
 
 "1732178": {
   title: "Quiz 1732178 — Coding Standards & Conventions",
   questions: [
-{q:1,type:"single",stem:"What is the main difference between coding standards and coding conventions?",
+{id:"std-01",q:1,type:"single",topic:"Standards vs Conventions",difficulty:"Medium",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"What is the main difference between coding standards and coding conventions?",
  opts:[["A","Conventions apply only to one programming language, standards apply to all"],
        ["B","Standards are required rules, while conventions are more like guidelines"],
        ["C","Standards are for beginners, conventions are for experts"],
-       ["D","Standards are optional, while conventions are mandatory"]], ans:"B"},
+       ["D","Standards are optional, while conventions are mandatory"]], ans:"B",
+ explain:"Coding standards are typically mandatory rules a team must follow, while conventions are recommended style guidelines."},
 
-{q:2,type:"single",stem:"Coding conventions are strict rules that must always be followed without exception.",
- opts:[["A","True"],["B","False"]], ans:"B"},
+{id:"std-02",q:2,type:"single",topic:"Standards vs Conventions",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Coding conventions are strict rules that must always be followed without exception.",
+ opts:[["A","True"],["B","False"]], ans:"B",
+ explain:"Conventions are guidelines, not strict unbreakable rules — teams can adapt them as needed."},
 
-{q:3,type:"single",stem:"Which of the following is an example of a coding convention?",
+{id:"std-03",q:3,type:"single",topic:"Standards vs Conventions",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Which of the following is an example of a coding convention?",
  opts:[["A","Running unit tests on each commit"],["B","Writing a project README file"],
        ["C","Always writing comments in uppercase letters"],
-       ["D","Using camelCase for variable names in JavaScript"]], ans:"D"},
+       ["D","Using camelCase for variable names in JavaScript"]], ans:"D",
+ explain:"Using camelCase for JavaScript variable names is a common naming convention, not a formal standard or process."},
 
-{q:4,type:"single",stem:"A benefit of using software development tools is:",
+{id:"std-04",q:4,type:"single",topic:"Dev Tools",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"A benefit of using software development tools is:",
  opts:[["A","Improved productivity and efficiency"],["B","More manual work for the programmer"],
-       ["C","Reduced collaboration among developers"],["D","Increased errors in code"]], ans:"A"},
+       ["C","Reduced collaboration among developers"],["D","Increased errors in code"]], ans:"A",
+ explain:"Development tools like IDEs and linters streamline workflows, boosting productivity and efficiency."},
 
-{q:5,type:"single",stem:"Coding standards make it easier to maintain software over time.",
- opts:[["A","True"],["B","False"]], ans:"A"},
+{id:"std-05",q:5,type:"single",topic:"Standards vs Conventions",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Coding standards make it easier to maintain software over time.",
+ opts:[["A","True"],["B","False"]], ans:"A",
+ explain:"Consistent, standardized code is easier to read, debug, and update over its lifetime."},
 
-{q:6,type:"single",stem:"A debugger is a tool that helps programmers step through code to identify errors.",
- opts:[["A","False"],["B","True"]], ans:"B"},
+{id:"std-06",q:6,type:"single",topic:"Dev Tools",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"A debugger is a tool that helps programmers step through code to identify errors.",
+ opts:[["A","False"],["B","True"]], ans:"B",
+ explain:"A debugger lets programmers step through code execution to locate and fix errors."},
 
-{q:7,type:"single",stem:"Photoshop is a tool commonly used to help maintain coding standards automatically?",
- opts:[["A","False"],["B","True"]], ans:"A"},
+{id:"std-07",q:7,type:"single",topic:"Dev Tools",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Photoshop is a tool commonly used to help maintain coding standards automatically?",
+ opts:[["A","False"],["B","True"]], ans:"A",
+ explain:"Photoshop is a graphics editing tool, not a programming tool for enforcing coding standards."},
 
-{q:8,type:"single",stem:"Which of the following is NOT considered a software development tool?",
+{id:"std-08",q:8,type:"single",topic:"Dev Tools",difficulty:"Medium",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Which of the following is NOT considered a software development tool?",
  opts:[["A","Integrated Development Environment (IDE)"],["B","Version Control System"],
-       ["C","Waterfall Model"],["D","Debugger"]], ans:"C"},
+       ["C","Waterfall Model"],["D","Debugger"]], ans:"C",
+ explain:"The Waterfall Model is a software development methodology, not a development tool like an IDE, VCS, or debugger."},
 
-{q:9,type:"single",stem:"Coding standards are important because they:",
+{id:"std-09",q:9,type:"single",topic:"Standards vs Conventions",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Coding standards are important because they:",
  opts:[["A","Automatically fix all bugs"],
        ["B","Help maintain code readability, consistency, and quality"],
        ["C","Ensure every developer uses the same programming language"],
-       ["D","Eliminate the need for testing"]], ans:"B"},
+       ["D","Eliminate the need for testing"]], ans:"B",
+ explain:"Coding standards keep code readable, consistent, and higher quality across a team or project."},
 
-{q:10,type:"single",stem:"Which statement about coding standards is TRUE?",
+{id:"std-10",q:10,type:"single",topic:"Standards vs Conventions",difficulty:"Medium",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Which statement about coding standards is TRUE?",
  opts:[["A","They remove the need for debugging"],["B","They are only useful for large organizations"],
        ["C","They automatically optimize program performance"],
-       ["D","They make it easier for teams to collaborate on projects"]], ans:"D"},
+       ["D","They make it easier for teams to collaborate on projects"]], ans:"D",
+ explain:"Shared coding standards make it much easier for multiple developers to collaborate on the same codebase."},
 
-{q:11,type:"single",stem:"Which of the following best describes a coding standard?",
+{id:"std-11",q:11,type:"single",topic:"Standards vs Conventions",difficulty:"Medium",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Which of the following best describes a coding standard?",
  opts:[["A","A personal style preference of the programmer"],
        ["B","A set of agreed-upon rules for writing consistent, maintainable code"],
        ["C","A debugging process to find and fix errors"],
-       ["D","A tool that automatically generates code"]], ans:"B"},
+       ["D","A tool that automatically generates code"]], ans:"B",
+ explain:"A coding standard is a set of agreed-upon rules that keep code consistent and maintainable across a team."},
 
-{q:12,type:"single",stem:"Without development tools, programmers can still write code but may lose productivity and efficiency.",
- opts:[["A","False"],["B","True"]], ans:"B"},
+{id:"std-12",q:12,type:"single",topic:"Dev Tools",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Without development tools, programmers can still write code but may lose productivity and efficiency.",
+ opts:[["A","False"],["B","True"]], ans:"B",
+ explain:"Without dedicated tools, coding is still possible, but tasks take longer and are more error-prone."},
 
-{q:13,type:"single",stem:"Using consistent naming conventions makes programs easier for others to read.",
- opts:[["A","False"],["B","True"]], ans:"B"},
+{id:"std-13",q:13,type:"single",topic:"Standards vs Conventions",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Using consistent naming conventions makes programs easier for others to read.",
+ opts:[["A","False"],["B","True"]], ans:"B",
+ explain:"Consistent naming makes it much easier for other developers to understand and navigate the code."},
 
-{q:14,type:"single",stem:"Why are coding standards important in team projects?",
+{id:"std-14",q:14,type:"single",topic:"Standards vs Conventions",difficulty:"Medium",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Why are coding standards important in team projects?",
  opts:[["A","They automatically fix all bugs in a program"],["B","They make code run faster"],
        ["C","They ensure that all developers write code in a consistent and understandable way"],
-       ["D","They replace the need for testing"]], ans:"C"},
+       ["D","They replace the need for testing"]], ans:"C",
+ explain:"Standards keep everyone writing code the same predictable way, which is critical in team projects."},
 
-{q:15,type:"single",stem:"Software development tools are only used by expert programmers.",
- opts:[["A","False"],["B","True"]], ans:"A"}
+{id:"std-15",q:15,type:"single",topic:"Dev Tools",difficulty:"Easy",source:"Quiz 1732178 — Coding Standards & Conventions",
+ stem:"Software development tools are only used by expert programmers.",
+ opts:[["A","False"],["B","True"]], ans:"A",
+ explain:"Development tools benefit programmers of all skill levels, not just experts."}
   ]
 },
 
 "clean-architecture": {
   title: "Clean Architecture",
   questions: [
-{q:1,type:"single",stem:"What is Clean Architecture?",
+{id:"arch-01",q:1,type:"single",topic:"Architecture Principles",difficulty:"Medium",source:"Clean Architecture",
+ stem:"What is Clean Architecture?",
  opts:[["A","A UI design framework for building responsive websites"],
        ["B","A software design approach that emphasizes separation of concerns, maintainability, and testability"],
        ["C","A database management system for cloud applications"],
-       ["D","A testing framework exclusive to Java applications"]], ans:"B"},
+       ["D","A testing framework exclusive to Java applications"]], ans:"B",
+ explain:"Clean Architecture is a design approach focused on separating concerns so systems stay maintainable and testable over time."},
 
-{q:2,type:"single",stem:"Which of the following is a benefit of using Clean Architecture?",
+{id:"arch-02",q:2,type:"single",topic:"Architecture Principles",difficulty:"Easy",source:"Clean Architecture",
+ stem:"Which of the following is a benefit of using Clean Architecture?",
  opts:[["A","It eliminates the need for testing"],["B","It improves maintainability and scalability"],
-       ["C","It requires a specific programming language"],["D","It increases coupling between components"]], ans:"B"},
+       ["C","It requires a specific programming language"],["D","It increases coupling between components"]], ans:"B",
+ explain:"By decoupling layers, Clean Architecture makes systems easier to maintain and scale as they grow."},
 
-{q:3,type:"single",stem:"Clean Architecture makes code testable without dependency on which two components?",
+{id:"arch-03",q:3,type:"single",topic:"Architecture Principles",difficulty:"Medium",source:"Clean Architecture",
+ stem:"Clean Architecture makes code testable without dependency on which two components?",
  opts:[["A","Version control and debugging tools"],["B","UI and database"],
-       ["C","Compilers and interpreters"],["D","APIs and servers"]], ans:"B"},
+       ["C","Compilers and interpreters"],["D","APIs and servers"]], ans:"B",
+ explain:"Business logic in Clean Architecture is independent of the UI and database, so it can be tested without either."},
 
-{q:4,type:"single",stem:"What does Clean Architecture support in terms of frameworks and tools?",
+{id:"arch-04",q:4,type:"single",topic:"Architecture Principles",difficulty:"Medium",source:"Clean Architecture",
+ stem:"What does Clean Architecture support in terms of frameworks and tools?",
  opts:[["A","Locking the project into one framework permanently"],
        ["B","Flexible replacement of frameworks and tools"],
-       ["C","Removing the need for any framework"],["D","Using only proprietary tools"]], ans:"B"},
+       ["C","Removing the need for any framework"],["D","Using only proprietary tools"]], ans:"B",
+ explain:"Clean Architecture keeps frameworks and tools at the edges, so they can be swapped without touching core business logic."},
 
-{q:5,type:"single",stem:"Which principle does Clean Architecture emphasize?",
+{id:"arch-05",q:5,type:"single",topic:"Architecture Principles",difficulty:"Easy",source:"Clean Architecture",
+ stem:"Which principle does Clean Architecture emphasize?",
  opts:[["A","Tight coupling between UI and business logic"],["B","Separation of concerns"],
-       ["C","Mixing all logic into a single layer"],["D","Ignoring maintainability for faster development"]], ans:"B"}
+       ["C","Mixing all logic into a single layer"],["D","Ignoring maintainability for faster development"]], ans:"B",
+ explain:"Separation of concerns — keeping layers independent — is a core principle of Clean Architecture."}
   ]
 }
 
 };
 
 /* =========================================================
-   APP LOGIC
-   Each question is checked individually via a Submit button —
-   no end-of-quiz bulk grading.
+   2. VALIDATION — run at load, report without crashing
 ========================================================= */
-let activeQuizId = Object.keys(QUIZZES)[0];
-let Q = QUIZZES[activeQuizId].questions;
-let TOTAL = Q.length;
-let current = 0;
-let answers = {};      // q# -> selected value(s), pre-submit or post-submit
-let submitted = {};    // q# -> bool, has this question been checked
-let results = {};      // q# -> bool, correct or not (only valid if submitted)
-
-const navGrid = document.getElementById('navGrid');
-const checkedText = document.getElementById('checkedText');
-const correctText = document.getElementById('correctText');
-const progressBarInner = document.getElementById('progressBarInner');
-const quizSelect = document.getElementById('quizSelect');
-const brandTitle = document.getElementById('brandTitle');
-const loadedCount = document.getElementById('loadedCount');
-
-function populateQuizSelect(){
-  quizSelect.innerHTML = '';
-  Object.keys(QUIZZES).forEach(id=>{
-    const o = document.createElement('option');
-    o.value = id; o.textContent = QUIZZES[id].title;
-    quizSelect.appendChild(o);
-  });
-  quizSelect.value = activeQuizId;
-}
-populateQuizSelect();
-
-quizSelect.onchange = ()=>{ loadQuiz(quizSelect.value); };
-
-function loadQuiz(id){
-  activeQuizId = id;
-  Q = QUIZZES[id].questions;
-  TOTAL = Q.length;
-  current = 0;
-  answers = {};
-  submitted = {};
-  results = {};
-  loadedCount.textContent = TOTAL;
-  document.getElementById('resultsScreen').style.display='none';
-  document.getElementById('quizScreen').style.display='block';
-  document.getElementById('sidebar').style.display='flex';
-  buildNav();
-  render();
-}
-
-function buildNav(){
-  navGrid.innerHTML = '';
-  Q.forEach((qq,i)=>{
-    const b = document.createElement('div');
-    b.className = 'navBtn';
-    b.textContent = qq.q;
-    b.onclick = ()=>{ current = i; render(); };
-    navGrid.appendChild(b);
+function applyDefaults(quizzes){
+  Object.keys(quizzes).forEach(quizId=>{
+    quizzes[quizId].questions.forEach((q, idx)=>{
+      if(!q.id) q.id = quizId + "-q" + (idx+1);
+      if(!q.topic) q.topic = "General";
+      if(!q.difficulty) q.difficulty = "—";
+      if(!q.source) q.source = quizzes[quizId].title;
+      if(!q.explain) q.explain = "No explanation provided for this question.";
+      if(q.type==="multi" && typeof q.n !== "number") q.n = Array.isArray(q.ans) ? q.ans.length : 1;
+    });
   });
 }
 
-function hasSelection(q){
-  const a = answers[q.q];
-  if(q.type==='single') return !!a;
-  if(q.type==='multi') return a && a.length>0;
-  return false;
+function validateQuizData(quizzes){
+  const errors = [];
+  Object.keys(quizzes).forEach(quizId=>{
+    const seenIds = new Set();
+    const seenText = new Set();
+    quizzes[quizId].questions.forEach((q, idx)=>{
+      const loc = "[" + quizId + " #" + (idx+1) + "]";
+      if(!q.id){ errors.push(loc + " missing id"); }
+      else if(seenIds.has(q.id)){ errors.push(loc + ' duplicate id "' + q.id + '"'); }
+      else seenIds.add(q.id);
+
+      const normStem = (q.stem||"").trim().toLowerCase();
+      if(normStem){
+        if(seenText.has(normStem)) errors.push(loc + " duplicate question text");
+        else seenText.add(normStem);
+      }
+
+      if(!["single","multi"].includes(q.type)){ errors.push(loc + ' invalid type "' + q.type + '"'); }
+      if(!Array.isArray(q.opts) || q.opts.length===0){ errors.push(loc + " empty option list"); }
+
+      const optKeys = Array.isArray(q.opts) ? q.opts.map(o=>o[0]) : [];
+      if(q.ans===undefined || q.ans===null){
+        errors.push(loc + " missing answer key");
+      } else if(q.type==="single"){
+        if(!optKeys.includes(q.ans)) errors.push(loc + ' answer key "' + q.ans + '" not found in options');
+      } else if(q.type==="multi"){
+        if(!Array.isArray(q.ans)){
+          errors.push(loc + " multi-select answer must be an array");
+        } else {
+          q.ans.forEach(a=>{
+            if(!optKeys.includes(a)) errors.push(loc + ' answer key "' + a + '" not found in options');
+          });
+          if(typeof q.n !== "number" || q.n !== q.ans.length){
+            errors.push(loc + " multi-select n (" + q.n + ") does not match answer count (" + q.ans.length + ")");
+          }
+          if(typeof q.n === "number" && q.n > optKeys.length){
+            errors.push(loc + " n (" + q.n + ") exceeds available option count");
+          }
+        }
+      }
+    });
+  });
+  return errors;
 }
 
-function updateSidebar(){
-  const checkedCount = Q.filter(q=>submitted[q.q]).length;
-  const correctCount = Q.filter(q=>submitted[q.q] && results[q.q]).length;
-  checkedText.textContent = checkedCount + ' / ' + TOTAL;
-  correctText.textContent = correctCount;
-  progressBarInner.style.width = (checkedCount/TOTAL*100) + '%';
-  const btns = navGrid.children;
-  Q.forEach((qq,i)=>{
-    btns[i].classList.remove('picked','correct','incorrect');
-    if(submitted[qq.q]){
-      btns[i].classList.add(results[qq.q] ? 'correct' : 'incorrect');
-    } else if(hasSelection(qq)){
-      btns[i].classList.add('picked');
+applyDefaults(QUIZZES);
+const VALIDATION_ERRORS = validateQuizData(QUIZZES);
+
+/* index for fast lookup by quiz + question id */
+const QUESTION_INDEX = {};
+Object.keys(QUIZZES).forEach(quizId=>{
+  QUESTION_INDEX[quizId] = {};
+  QUIZZES[quizId].questions.forEach(q=>{ QUESTION_INDEX[quizId][q.id] = q; });
+});
+
+/* =========================================================
+   3. STATE + PERSISTENCE
+========================================================= */
+const STORAGE_KEY = "progtools_reviewer_state_v1";
+const SPECIAL_OPTION_RE = /^(all of the above|none of the above)\.?$/i;
+
+function shuffleArray(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    const tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+  }
+  return a;
+}
+function shuffleChoicesPreservingSpecials(opts){
+  const specialIdx = [];
+  const normal = [];
+  opts.forEach((o,i)=>{
+    if(SPECIAL_OPTION_RE.test((o[1]||"").trim())) specialIdx.push(i);
+    else normal.push(o);
+  });
+  const shuffledNormal = shuffleArray(normal);
+  const result = new Array(opts.length);
+  specialIdx.forEach(i=>{ result[i]=opts[i]; });
+  let ni=0;
+  for(let i=0;i<result.length;i++){
+    if(result[i]===undefined){ result[i]=shuffledNormal[ni++]; }
+  }
+  return result;
+}
+
+function newSession(quizId){
+  return {
+    quizId: quizId,
+    mode: "study",
+    shuffleQuestions: false,
+    shuffleChoices: false,
+    order: QUIZZES[quizId].questions.map(q=>q.id),
+    choiceOrder: {},
+    current: 0,
+    responses: {},
+    bookmarks: {},
+    finished: false,
+    reviewIds: null,
+    results: null
+  };
+}
+function newStats(){
+  return {attempts:0, lastScore:null, previousScore:null, bestScore:null, missedCounts:{}};
+}
+
+let STATE = {
+  activeQuizId: Object.keys(QUIZZES)[0],
+  sessions: {},
+  stats: {}
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.sessions){
+        STATE.activeQuizId = QUIZZES[parsed.activeQuizId] ? parsed.activeQuizId : STATE.activeQuizId;
+        STATE.sessions = parsed.sessions || {};
+        STATE.stats = parsed.stats || {};
+      }
     }
-    btns[i].classList.toggle('current', i===current);
+  }catch(e){ /* ignore corrupt storage, start fresh */ }
+  Object.keys(QUIZZES).forEach(quizId=>{
+    if(!STATE.sessions[quizId]) STATE.sessions[quizId] = newSession(quizId);
+    if(!STATE.stats[quizId]) STATE.stats[quizId] = newStats();
+    // fallbacks for sessions saved before a schema field existed
+    const s = STATE.sessions[quizId];
+    if(!s.order || !s.order.length) s.order = QUIZZES[quizId].questions.map(q=>q.id);
+    if(!s.choiceOrder) s.choiceOrder = {};
+    if(!s.responses) s.responses = {};
+    if(!s.bookmarks) s.bookmarks = {};
+    if(typeof s.current !== "number") s.current = 0;
+  });
+}
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+  }catch(e){ /* storage unavailable — continue in-memory only */ }
+}
+
+function getSession(quizId){ return STATE.sessions[quizId]; }
+function getStats(quizId){ return STATE.stats[quizId]; }
+function getResponse(quizId, qid){
+  const s = getSession(quizId);
+  if(!s.responses[qid]) s.responses[qid] = {selection:[], submitted:false, correct:null, attempts:0, everWrong:false};
+  return s.responses[qid];
+}
+function ensureChoiceOrder(quizId, q){
+  const s = getSession(quizId);
+  if(!s.choiceOrder[q.id]){
+    s.choiceOrder[q.id] = s.shuffleChoices ? shuffleChoicesPreservingSpecials(q.opts) : q.opts.slice();
+  }
+  return s.choiceOrder[q.id];
+}
+function regenerateOrderAndChoices(quizId){
+  const s = getSession(quizId);
+  const ids = QUIZZES[quizId].questions.map(q=>q.id);
+  s.order = s.shuffleQuestions ? shuffleArray(ids) : ids;
+  s.choiceOrder = {};
+  QUIZZES[quizId].questions.forEach(q=>{
+    s.choiceOrder[q.id] = s.shuffleChoices ? shuffleChoicesPreservingSpecials(q.opts) : q.opts.slice();
   });
 }
 
-function typeLabel(t){
-  return {single:'SINGLE CHOICE', multi:'MULTI SELECT'}[t];
-}
-
-function gradeQuestion(q){
-  const a = answers[q.q];
-  if(q.type==='single') return a===q.ans;
-  if(q.type==='multi'){
-    if(!a || a.length!==q.ans.length) return false;
-    const s1=[...a].sort().join(','); const s2=[...q.ans].sort().join(',');
+/* =========================================================
+   4. GRADING
+========================================================= */
+function gradeSelection(q, sel){
+  if(q.type==="single") return sel && sel[0]===q.ans;
+  if(q.type==="multi"){
+    if(!sel || sel.length!==q.ans.length) return false;
+    const s1 = sel.slice().sort().join(",");
+    const s2 = q.ans.slice().sort().join(",");
     return s1===s2;
   }
   return false;
 }
+function isSelectionComplete(q, sel){
+  sel = sel || [];
+  if(q.type==="single") return sel.length===1;
+  if(q.type==="multi") return sel.length===q.n;
+  return false;
+}
+function finalizeQuestionAtFinish(quizId, qid){
+  const q = QUESTION_INDEX[quizId][qid];
+  const resp = getResponse(quizId, qid);
+  if(resp.submitted) return;
+  if(!isSelectionComplete(q, resp.selection)) return;
+  resp.attempts = (resp.attempts||0)+1;
+  resp.correct = gradeSelection(q, resp.selection);
+  resp.submitted = true;
+  if(!resp.correct) resp.everWrong = true;
+}
+function computeResults(quizId){
+  const session = getSession(quizId);
+  const qs = QUIZZES[quizId].questions;
+  let correct=0, incorrect=0, unanswered=0;
+  const perTopic = {};
+  qs.forEach(q=>{
+    const r = session.responses[q.id] || {};
+    if(!perTopic[q.topic]) perTopic[q.topic] = {correct:0,total:0};
+    perTopic[q.topic].total++;
+    if(r.submitted){
+      if(r.correct){ correct++; perTopic[q.topic].correct++; }
+      else incorrect++;
+    } else {
+      unanswered++;
+    }
+  });
+  const total = qs.length;
+  const attempted = correct+incorrect;
+  const overallScore = total ? Math.round((correct/total)*100) : 0;
+  const attemptedAccuracy = attempted ? Math.round((correct/attempted)*100) : 0;
+  return {correct, incorrect, unanswered, total, attempted, overallScore, attemptedAccuracy, perTopic};
+}
+function updateStatsAfterFinish(quizId, results){
+  const s = getStats(quizId);
+  s.previousScore = s.lastScore;
+  s.lastScore = results.overallScore;
+  s.bestScore = (s.bestScore===null || results.overallScore > s.bestScore) ? results.overallScore : s.bestScore;
+  s.attempts = (s.attempts||0)+1;
+  const session = getSession(quizId);
+  QUIZZES[quizId].questions.forEach(q=>{
+    const r = session.responses[q.id];
+    if(r && r.submitted && !r.correct){
+      s.missedCounts[q.id] = (s.missedCounts[q.id]||0)+1;
+    }
+  });
+}
+function performanceMessage(score){
+  if(score>=90) return "Excellent — you've clearly mastered this material.";
+  if(score>=75) return "Solid understanding. A quick review of the misses will get you to mastery.";
+  if(score>=50) return "Getting there. Revisit the incorrect questions before your next attempt.";
+  return "This topic needs more review — try Study Mode to see explanations as you go.";
+}
 
-function render(){
-  const q = Q[current];
-  document.getElementById('qCounter').textContent = 'Question ' + q.q + ' / ' + TOTAL;
-  document.getElementById('qTypeTag').textContent = typeLabel(q.type);
-  document.getElementById('qStem').textContent = q.stem;
+/* =========================================================
+   5. DOM REFS
+========================================================= */
+const el = id => document.getElementById(id);
+const sidebarEl = el("sidebar");
+const quizSelect = el("quizSelect");
+const brandTitle = el("brandTitle");
+const loadedCount = el("loadedCount");
+const navGrid = el("navGrid");
+const navToggleBtn = el("navToggleBtn");
+const progressText = el("progressText");
+const progressBarInner = el("progressBarInner");
+const shuffleQToggle = el("shuffleQToggle");
+const shuffleCToggle = el("shuffleCToggle");
+const modeDesc = el("modeDesc");
+const quizScreen = el("quizScreen");
+const resultsScreen = el("resultsScreen");
 
-  const codeEl = document.getElementById('qCode');
-  if(q.code){ codeEl.style.display='block'; codeEl.textContent = q.code; }
-  else{ codeEl.style.display='none'; }
+const MODE_DESCRIPTIONS = {
+  study: "Immediate feedback with full explanations after every answer.",
+  practice: "Immediate feedback with a Try Again button — explanations reveal on request.",
+  exam: "Answers are saved silently. Feedback appears only after you finish."
+};
 
-  const flagEl = document.getElementById('qFlag');
-  if(q.flag){ flagEl.style.display='block'; flagEl.textContent = '⚠ ' + q.flag; }
-  else{ flagEl.style.display='none'; }
+/* =========================================================
+   6. VALIDATION BANNER
+========================================================= */
+function renderValidationBanner(){
+  const banner = el("validationBanner");
+  const list = el("validationList");
+  if(VALIDATION_ERRORS.length===0) return;
+  list.innerHTML = "";
+  VALIDATION_ERRORS.forEach(msg=>{
+    const li = document.createElement("li");
+    li.textContent = msg;
+    list.appendChild(li);
+  });
+  banner.classList.add("show");
+  console.warn("Quiz data validation issues:", VALIDATION_ERRORS);
+}
+el("dismissValidation").addEventListener("click", ()=>{
+  el("validationBanner").classList.remove("show");
+});
 
-  const body = document.getElementById('qBody');
-  body.innerHTML='';
-  const isLocked = !!submitted[q.q];
+/* =========================================================
+   7. SIDEBAR: quiz select, mode, settings, nav grid
+========================================================= */
+function populateQuizSelect(){
+  quizSelect.innerHTML = "";
+  Object.keys(QUIZZES).forEach(id=>{
+    const o = document.createElement("option");
+    o.value = id; o.textContent = QUIZZES[id].title;
+    quizSelect.appendChild(o);
+  });
+  quizSelect.value = STATE.activeQuizId;
+}
+quizSelect.addEventListener("change", ()=>{ loadQuiz(quizSelect.value); });
 
-  if(q.type==='single'){
-    const wrap = document.createElement('div'); wrap.className='choiceList';
-    q.opts.forEach(([k,v])=>{
-      const div = document.createElement('label'); div.className='choice' + (isLocked ? ' locked' : '');
-      div.innerHTML = '<input type="radio" name="single'+q.q+'"><span class="txt"></span>';
-      div.querySelector('.txt').textContent = v;
-      const input = div.querySelector('input');
-      input.checked = answers[q.q]===k;
-      input.disabled = isLocked;
-      if(answers[q.q]===k && !isLocked) div.classList.add('selected');
-      input.onchange = ()=>{ answers[q.q]=k; refreshSubmitState(); render(); };
-      wrap.appendChild(div);
+document.querySelectorAll(".modeBtn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const session = getSession(STATE.activeQuizId);
+    session.mode = btn.dataset.mode;
+    saveState();
+    syncModeButtons();
+    renderQuestionView();
+  });
+});
+function syncModeButtons(){
+  const session = getSession(STATE.activeQuizId);
+  document.querySelectorAll(".modeBtn").forEach(btn=>{
+    const active = btn.dataset.mode===session.mode;
+    btn.setAttribute("aria-pressed", active ? "true":"false");
+  });
+  modeDesc.textContent = MODE_DESCRIPTIONS[session.mode] || "";
+}
+
+shuffleQToggle.addEventListener("change", ()=>{
+  const session = getSession(STATE.activeQuizId);
+  session.shuffleQuestions = shuffleQToggle.checked;
+  regenerateOrderAndChoices(STATE.activeQuizId);
+  session.current = 0;
+  saveState();
+  buildNavGrid();
+  renderQuestionView();
+});
+shuffleCToggle.addEventListener("change", ()=>{
+  const session = getSession(STATE.activeQuizId);
+  session.shuffleChoices = shuffleCToggle.checked;
+  regenerateOrderAndChoices(STATE.activeQuizId);
+  saveState();
+  renderQuestionView();
+});
+function syncSettingsUI(){
+  const session = getSession(STATE.activeQuizId);
+  shuffleQToggle.checked = !!session.shuffleQuestions;
+  shuffleCToggle.checked = !!session.shuffleChoices;
+}
+
+navToggleBtn.addEventListener("click", ()=>{
+  const open = navGrid.classList.toggle("open");
+  navToggleBtn.setAttribute("aria-expanded", open ? "true":"false");
+  navToggleBtn.textContent = open ? "Hide question navigator ▴" : "Show question navigator ▾";
+});
+
+function activeOrder(){
+  const session = getSession(STATE.activeQuizId);
+  return session.reviewIds ? session.reviewIds : session.order;
+}
+
+function buildNavGrid(){
+  const session = getSession(STATE.activeQuizId);
+  navGrid.innerHTML = "";
+  session.order.forEach((qid, i)=>{
+    const q = QUESTION_INDEX[STATE.activeQuizId][qid];
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "navBtn";
+    b.textContent = String(q.q);
+    b.setAttribute("aria-label", "Go to question " + q.q + (session.bookmarks[qid] ? " (bookmarked)" : ""));
+    b.addEventListener("click", ()=>{
+      session.reviewIds = null;
+      session.current = i;
+      saveState();
+      renderQuestionView();
     });
-    body.appendChild(wrap);
-    if(isLocked) applySingleFeedback(q, wrap);
+    if(session.bookmarks[qid]){
+      const dot = document.createElement("span");
+      dot.className = "bmDot";
+      dot.setAttribute("aria-hidden","true");
+      b.appendChild(dot);
+    }
+    navGrid.appendChild(b);
+  });
+  updateNavGridState();
+}
+function updateNavGridState(){
+  const session = getSession(STATE.activeQuizId);
+  const btns = navGrid.querySelectorAll(".navBtn");
+  const curId = activeOrder()[session.current];
+  session.order.forEach((qid, i)=>{
+    const btn = btns[i];
+    if(!btn) return;
+    const r = session.responses[qid];
+    btn.classList.remove("answered","current","correct","incorrect");
+    if(r && r.submitted){
+      btn.classList.add(r.correct ? "correct" : "incorrect");
+    } else if(r && r.selection && r.selection.length){
+      btn.classList.add("answered");
+    }
+    if(qid===curId) btn.classList.add("current");
+  });
+}
+function updateProgress(){
+  const session = getSession(STATE.activeQuizId);
+  const qs = QUIZZES[STATE.activeQuizId].questions;
+  const answeredCount = qs.filter(q=>{
+    const r = session.responses[q.id];
+    return r && (r.submitted || (r.selection && r.selection.length>0));
+  }).length;
+  progressText.textContent = answeredCount + " / " + qs.length;
+  progressBarInner.style.width = (qs.length ? (answeredCount/qs.length*100) : 0) + "%";
+  updateNavGridState();
+}
+
+/* =========================================================
+   8. LOAD / SWITCH QUIZ
+========================================================= */
+function loadQuiz(quizId){
+  STATE.activeQuizId = quizId;
+  const session = getSession(quizId);
+  if(!session.order || !session.order.length){
+    regenerateOrderAndChoices(quizId);
   }
-
-  if(q.type==='multi'){
-    const hint = document.createElement('div'); hint.className='hint';
-    hint.textContent = 'Select exactly '+q.n+' choice(s).';
-    body.appendChild(hint);
-    const wrap = document.createElement('div'); wrap.className='choiceList';
-    if(!answers[q.q]) answers[q.q]=[];
-    q.opts.forEach(([k,v])=>{
-      const div = document.createElement('label'); div.className='choice' + (isLocked ? ' locked' : '');
-      div.innerHTML = '<input type="checkbox"><span class="txt"></span>';
-      div.querySelector('.txt').textContent = v;
-      const input = div.querySelector('input');
-      input.checked = answers[q.q].includes(k);
-      input.disabled = isLocked;
-      if(input.checked && !isLocked) div.classList.add('selected');
-      input.onchange = ()=>{
-        let arr = answers[q.q];
-        if(input.checked){ arr.push(k); } else { arr = arr.filter(x=>x!==k); }
-        answers[q.q]=arr;
-        refreshSubmitState(); render();
-      };
-      wrap.appendChild(div);
-    });
-    body.appendChild(wrap);
-    if(isLocked) applyMultiFeedback(q, wrap);
-  }
-
-  const submitBtn = document.getElementById('submitBtn');
-  const fb = document.getElementById('feedbackBox');
-  fb.className=''; fb.innerHTML='';
-
-  if(isLocked){
-    submitBtn.style.display='none';
-    const correct = results[q.q];
-    fb.className = correct ? 'ok':'bad';
-    fb.textContent = correct ? '✔ Correct!' : '✘ Not quite — the correct answer is highlighted above.';
+  saveState();
+  brandTitle.textContent = "Programming Tools Reviewer";
+  loadedCount.textContent = QUIZZES[quizId].questions.length;
+  quizSelect.value = quizId;
+  syncModeButtons();
+  syncSettingsUI();
+  buildNavGrid();
+  if(session.finished){
+    showResultsScreen(quizId);
   } else {
-    submitBtn.style.display='inline-block';
-    submitBtn.disabled = !hasSelection(q);
+    quizScreen.style.display = "block";
+    resultsScreen.style.display = "none";
+    renderQuestionView();
+  }
+}
+
+/* =========================================================
+   9. QUESTION VIEW RENDERING
+========================================================= */
+function currentQuestion(){
+  const session = getSession(STATE.activeQuizId);
+  const order = activeOrder();
+  if(session.current >= order.length) session.current = Math.max(0, order.length-1);
+  const qid = order[session.current];
+  return QUESTION_INDEX[STATE.activeQuizId][qid];
+}
+function feedbackShouldShow(session, resp){
+  if(!resp || !resp.submitted) return false;
+  return session.mode !== "exam" || session.finished;
+}
+
+function renderQuestionView(){
+  const quizId = STATE.activeQuizId;
+  const session = getSession(quizId);
+  const order = activeOrder();
+  const q = currentQuestion();
+  const resp = getResponse(quizId, q.id);
+  const posInOrder = session.current + 1;
+
+  el("qCounter").textContent = "Question " + posInOrder + " / " + order.length +
+    (session.reviewIds ? " (filtered view)" : "");
+  el("qTypeTag").textContent = q.type==="multi" ? "MULTI SELECT" : "SINGLE CHOICE";
+  el("qTopicTag").textContent = q.topic;
+  el("qDiffTag").textContent = q.difficulty;
+  el("qStem").textContent = q.stem;
+
+  const bookmarkBtn = el("bookmarkBtn");
+  const isBm = !!session.bookmarks[q.id];
+  bookmarkBtn.setAttribute("aria-pressed", isBm ? "true":"false");
+  bookmarkBtn.textContent = (isBm ? "★ Bookmarked" : "☆ Bookmark");
+
+  const codeEl = el("qCode");
+  if(q.code){ codeEl.style.display="block"; codeEl.textContent = q.code; }
+  else { codeEl.style.display="none"; }
+
+  const flagEl = el("qFlag");
+  if(q.flag){ flagEl.style.display="block"; flagEl.textContent = "⚠ " + q.flag; }
+  else { flagEl.style.display="none"; }
+
+  const srcEl = document.getElementById("sourceNote") || (function(){
+    const d = document.createElement("div");
+    d.id = "sourceNote"; d.className = "sourceNote";
+    el("qFlag").insertAdjacentElement("afterend", d);
+    return d;
+  })();
+  srcEl.textContent = "Source: " + q.source;
+
+  const body = el("qBody");
+  body.innerHTML = "";
+  const showFeedback = feedbackShouldShow(session, resp);
+  const choiceOrder = ensureChoiceOrder(quizId, q);
+
+  if(q.type==="multi"){
+    const hint = document.createElement("div");
+    hint.className = "hint";
+    const label = document.createElement("span");
+    label.textContent = "Select exactly " + q.n + " choice(s).";
+    const counter = document.createElement("span");
+    counter.id = "multiCounter";
+    counter.textContent = (resp.selection.length) + " / " + q.n + " selected";
+    hint.appendChild(label); hint.appendChild(counter);
+    body.appendChild(hint);
   }
 
-  document.getElementById('prevBtn').disabled = current===0;
-  document.getElementById('nextBtn').textContent = current===TOTAL-1 ? 'Finish ▸' : 'Next ▸';
-  updateSidebar();
-}
+  const wrap = document.createElement("div");
+  wrap.className = "choiceList";
+  wrap.setAttribute("role", q.type==="multi" ? "group" : "radiogroup");
+  wrap.setAttribute("aria-label", "Answer choices");
+  const locked = resp.submitted && !(session.mode!=="exam" || session.finished ? false : true); // placeholder, real lock logic below
+  const inputsLocked = resp.submitted; // once submitted (graded), inputs are locked until Try Again
 
-function refreshSubmitState(){
-  const q = Q[current];
-  document.getElementById('submitBtn').disabled = !hasSelection(q);
-}
+  choiceOrder.forEach(([k, v], idx)=>{
+    const div = document.createElement("label");
+    div.className = "choice";
+    const input = document.createElement("input");
+    input.type = q.type==="multi" ? "checkbox" : "radio";
+    input.name = q.type==="multi" ? undefined : ("single_" + q.id);
+    input.value = k;
+    input.checked = resp.selection.includes(k);
+    input.disabled = inputsLocked;
+    input.setAttribute("aria-label", v);
+    const txt = document.createElement("span");
+    txt.className = "txt";
+    txt.textContent = v;
+    const kbd = document.createElement("span");
+    kbd.className = "kbdHint";
+    kbd.setAttribute("aria-hidden","true");
+    kbd.textContent = String(idx+1);
 
-function applySingleFeedback(q, wrap){
-  const labels = wrap.querySelectorAll('.choice');
-  labels.forEach((div,i)=>{
-    const k = q.opts[i][0];
-    if(k===q.ans) div.classList.add('showCorrect');
-    else if(answers[q.q]===k) div.classList.add('showWrong');
+    div.appendChild(input);
+    div.appendChild(txt);
+    div.appendChild(kbd);
+
+    if(input.checked) div.classList.add("selected");
+
+    if(showFeedback){
+      if(k===q.ans || (Array.isArray(q.ans) && q.ans.includes(k))) div.classList.add("showCorrect");
+      else if(resp.selection.includes(k)) div.classList.add("showWrong");
+    } else if(q.type==="multi" && !input.checked && resp.selection.length>=q.n){
+      input.disabled = true;
+      div.classList.add("disabledLimit");
+    }
+
+    input.addEventListener("change", ()=>{ onChoiceChange(q, k, input.checked); });
+    wrap.appendChild(div);
   });
+  body.appendChild(wrap);
+
+  renderFeedback(session, q, resp, showFeedback);
+  renderActionRow(session, q, resp, showFeedback);
+
+  el("prevBtn").disabled = session.current===0;
+  el("nextBtn").textContent = (session.current===order.length-1) ? "Finish ▸" : "Next ▸";
+
+  updateProgress();
+  saveState();
 }
-function applyMultiFeedback(q, wrap){
-  const labels = wrap.querySelectorAll('.choice');
-  labels.forEach((div,i)=>{
-    const k = q.opts[i][0];
-    const chosen = answers[q.q].includes(k);
-    if(q.ans.includes(k)) div.classList.add('showCorrect');
-    else if(chosen) div.classList.add('showWrong');
+
+function onChoiceChange(q, key, checked){
+  const quizId = STATE.activeQuizId;
+  const resp = getResponse(quizId, q.id);
+  if(q.type==="single"){
+    resp.selection = [key];
+  } else {
+    let sel = resp.selection.slice();
+    if(checked){ if(!sel.includes(key)) sel.push(key); }
+    else { sel = sel.filter(x=>x!==key); }
+    resp.selection = sel;
+  }
+  saveState();
+  renderQuestionView();
+}
+
+function renderFeedback(session, q, resp, showFeedback){
+  const fb = el("feedbackBox");
+  fb.className = "";
+  fb.innerHTML = "";
+  if(!showFeedback){
+    if(resp.submitted && session.mode==="exam" && !session.finished){
+      fb.className = "";
+      fb.style.display = "none";
+    }
+    return;
+  }
+  fb.style.display = "";
+  fb.className = resp.correct ? "ok" : "bad";
+  const head = document.createElement("div");
+  head.className = "fbHead";
+  head.textContent = resp.correct ? "✔ Correct" : "✘ Not quite — the correct answer is highlighted above.";
+  fb.appendChild(head);
+
+  const wantsExplain = session.mode!=="practice" || resp.correct || resp._revealExplain;
+  if(wantsExplain){
+    const exp = document.createElement("div");
+    exp.className = "fbExplain";
+    const b = document.createElement("b");
+    b.textContent = "Why: ";
+    exp.appendChild(b);
+    exp.appendChild(document.createTextNode(q.explain));
+    fb.appendChild(exp);
+  } else {
+    const revealBtn = document.createElement("button");
+    revealBtn.type = "button";
+    revealBtn.className = "revealBtn";
+    revealBtn.textContent = "Show explanation";
+    revealBtn.addEventListener("click", ()=>{
+      resp._revealExplain = true;
+      renderQuestionView();
+    });
+    fb.appendChild(revealBtn);
+  }
+}
+
+function renderActionRow(session, q, resp, showFeedback){
+  const row = el("actionRow");
+  row.innerHTML = "";
+  const complete = isSelectionComplete(q, resp.selection);
+
+  if(!resp.submitted){
+    if(session.mode==="exam"){
+      const note = document.createElement("div");
+      note.className = "attemptsNote";
+      note.textContent = complete ? "Answer saved. Feedback will appear after you finish the quiz." : "Select an answer — it will be saved automatically.";
+      row.appendChild(note);
+      return;
+    }
+    const submitBtn = document.createElement("button");
+    submitBtn.type = "button";
+    submitBtn.className = "submitBtn";
+    submitBtn.textContent = "Submit Answer";
+    submitBtn.disabled = !complete;
+    submitBtn.addEventListener("click", ()=>{ submitCurrentQuestion(); });
+    row.appendChild(submitBtn);
+    if(resp.attempts>0){
+      const note = document.createElement("div");
+      note.className = "attemptsNote";
+      note.textContent = "Attempt " + (resp.attempts+1) + (resp.attempts>0 ? " — previous attempt was incorrect." : "");
+      row.appendChild(note);
+    }
+    return;
+  }
+
+  // submitted — show attempts note, and Try Again if incorrect and feedback is visible
+  if(showFeedback){
+    if(!resp.correct){
+      const tryBtn = document.createElement("button");
+      tryBtn.type = "button";
+      tryBtn.className = "tryAgain";
+      tryBtn.textContent = "↻ Try Again";
+      tryBtn.addEventListener("click", ()=>{ tryAgainCurrentQuestion(); });
+      row.appendChild(tryBtn);
+    }
+    const note = document.createElement("div");
+    note.className = "attemptsNote";
+    note.textContent = "Attempts on this question: " + resp.attempts;
+    row.appendChild(note);
+  }
+}
+
+function submitCurrentQuestion(){
+  const quizId = STATE.activeQuizId;
+  const q = currentQuestion();
+  const resp = getResponse(quizId, q.id);
+  if(!isSelectionComplete(q, resp.selection)) return;
+  resp.attempts = (resp.attempts||0)+1;
+  resp.correct = gradeSelection(q, resp.selection);
+  resp.submitted = true;
+  resp._revealExplain = false;
+  if(!resp.correct) resp.everWrong = true;
+  saveState();
+  renderQuestionView();
+}
+function tryAgainCurrentQuestion(){
+  const quizId = STATE.activeQuizId;
+  const q = currentQuestion();
+  const resp = getResponse(quizId, q.id);
+  resp.selection = [];
+  resp.submitted = false;
+  resp.correct = null;
+  resp._revealExplain = false;
+  saveState();
+  renderQuestionView();
+}
+
+/* bookmark */
+el("bookmarkBtn").addEventListener("click", ()=>{
+  const quizId = STATE.activeQuizId;
+  const session = getSession(quizId);
+  const q = currentQuestion();
+  session.bookmarks[q.id] = !session.bookmarks[q.id];
+  saveState();
+  renderQuestionView();
+  buildNavGrid();
+});
+
+/* prev / next */
+el("prevBtn").addEventListener("click", ()=>{
+  const session = getSession(STATE.activeQuizId);
+  if(session.current>0){ session.current--; saveState(); renderQuestionView(); }
+});
+el("nextBtn").addEventListener("click", ()=>{
+  const session = getSession(STATE.activeQuizId);
+  const order = activeOrder();
+  if(session.current < order.length-1){
+    session.current++; saveState(); renderQuestionView();
+  } else {
+    attemptFinish();
+  }
+});
+el("finishBtn").addEventListener("click", attemptFinish);
+
+/* =========================================================
+   10. FINISH / RESULTS
+========================================================= */
+function attemptFinish(){
+  const quizId = STATE.activeQuizId;
+  const qs = QUIZZES[quizId].questions;
+  const session = getSession(quizId);
+  const trulyUnanswered = qs.filter(q=>{
+    const r = session.responses[q.id];
+    if(!r) return true;
+    if(r.submitted) return false;
+    return !isSelectionComplete(q, r.selection);
   });
+  if(trulyUnanswered.length>0){
+    const ok = confirm("You have " + trulyUnanswered.length + " unanswered question(s). Finish anyway?");
+    if(!ok) return;
+  }
+  finishQuiz(quizId);
+}
+function finishQuiz(quizId){
+  const qs = QUIZZES[quizId].questions;
+  const session = getSession(quizId);
+  qs.forEach(q=> finalizeQuestionAtFinish(quizId, q.id));
+  session.finished = true;
+  session.reviewIds = null;
+  session.current = 0;
+  const results = computeResults(quizId);
+  updateStatsAfterFinish(quizId, results);
+  session.results = results;
+  saveState();
+  showResultsScreen(quizId);
 }
 
-document.getElementById('submitBtn').onclick = ()=>{
-  const q = Q[current];
-  if(!hasSelection(q)) return;
-  submitted[q.q] = true;
-  results[q.q] = gradeQuestion(q);
-  render();
-};
+function showResultsScreen(quizId){
+  quizScreen.style.display = "none";
+  resultsScreen.style.display = "block";
+  const session = getSession(quizId);
+  const stats = getStats(quizId);
+  const results = session.results || computeResults(quizId);
 
-document.getElementById('prevBtn').onclick = ()=>{ if(current>0){ current--; render(); } };
-document.getElementById('nextBtn').onclick = ()=>{
-  if(current<TOTAL-1){ current++; render(); }
-  else { showResults(); }
-};
+  el("scoreBig").textContent = results.overallScore + "%";
+  el("scoreSub").textContent = results.correct + " of " + results.total + " correct (overall score)";
+  el("accSub").textContent = "Attempted accuracy: " + results.attemptedAccuracy + "% (" + results.correct + " of " + results.attempted + " attempted)";
+  el("perfMsg").textContent = performanceMessage(results.overallScore);
 
-function showResults(){
-  document.getElementById('quizScreen').style.display='none';
-  document.getElementById('resultsScreen').style.display='block';
-  document.getElementById('sidebar').style.display='none';
+  el("statCorrect").textContent = results.correct;
+  el("statIncorrect").textContent = results.incorrect;
+  el("statUnanswered").textContent = results.unanswered;
+  el("statAttempts").textContent = stats.attempts;
 
-  const checkedCount = Q.filter(q=>submitted[q.q]).length;
-  const correctCount = Q.filter(q=>submitted[q.q] && results[q.q]).length;
-  const pct = checkedCount>0 ? Math.round(correctCount/checkedCount*100) : 0;
+  el("prevScoreVal").textContent = stats.previousScore===null ? "—" : stats.previousScore + "%";
+  el("bestScoreVal").textContent = stats.bestScore===null ? "—" : stats.bestScore + "%";
 
-  document.getElementById('scoreBig').textContent = pct+'%';
-  document.getElementById('scoreSub').textContent =
-    correctCount+' of '+checkedCount+' checked correct' + (checkedCount<TOTAL ? '  ·  '+(TOTAL-checkedCount)+' not attempted' : '');
+  const topicWrap = el("topicBreakdown");
+  topicWrap.innerHTML = "";
+  Object.keys(results.perTopic).sort().forEach(topic=>{
+    const t = results.perTopic[topic];
+    const row = document.createElement("div");
+    row.className = "topicRow";
+    const name = document.createElement("span"); name.className="name"; name.textContent = topic;
+    const barOuter = document.createElement("span"); barOuter.className="topicBarOuter";
+    const barInner = document.createElement("span"); barInner.className="topicBarInner";
+    const pct = t.total ? (t.correct/t.total*100) : 0;
+    barInner.style.width = pct + "%";
+    barOuter.appendChild(barInner);
+    const frac = document.createElement("span"); frac.className="frac"; frac.textContent = t.correct + "/" + t.total;
+    row.appendChild(name); row.appendChild(barOuter); row.appendChild(frac);
+    topicWrap.appendChild(row);
+  });
 
-  const grid = document.getElementById('resultsGrid');
-  grid.innerHTML='';
-  Q.forEach(q=>{
-    const box = document.createElement('div');
-    let cls = 'unattempted';
-    if(submitted[q.q]) cls = results[q.q] ? 'correct' : 'incorrect';
-    box.className = 'rBox ' + cls;
-    box.textContent = q.q;
-    box.onclick = ()=>{ jumpTo(q.q-1); };
+  const missedLabel = el("missedLabel");
+  const missedWrap = el("missedList");
+  missedWrap.innerHTML = "";
+  const missedEntries = Object.keys(stats.missedCounts)
+    .map(qid=>({qid, count: stats.missedCounts[qid]}))
+    .filter(m=>m.count>0)
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,5);
+  if(missedEntries.length>0){
+    missedLabel.style.display = "";
+    missedEntries.forEach(m=>{
+      const q = QUESTION_INDEX[quizId][m.qid];
+      if(!q) return;
+      const item = document.createElement("div");
+      item.className = "missedItem";
+      item.tabIndex = 0;
+      item.setAttribute("role","button");
+      const stemPreview = document.createElement("span");
+      stemPreview.textContent = q.stem.length>70 ? q.stem.slice(0,70)+"…" : q.stem;
+      const cnt = document.createElement("span");
+      cnt.className = "cnt";
+      cnt.textContent = "missed " + m.count + "×";
+      item.appendChild(stemPreview);
+      item.appendChild(cnt);
+      const jump = ()=>{ jumpToReview(quizId, [m.qid]); };
+      item.addEventListener("click", jump);
+      item.addEventListener("keydown", (e)=>{ if(e.key==="Enter" || e.key===" "){ e.preventDefault(); jump(); } });
+      missedWrap.appendChild(item);
+    });
+  } else {
+    missedLabel.style.display = "none";
+  }
+
+  const grid = el("resultsGrid");
+  grid.innerHTML = "";
+  QUIZZES[quizId].questions.forEach(q=>{
+    const r = session.responses[q.id];
+    const box = document.createElement("button");
+    box.type = "button";
+    let status = "unanswered", symbol = "•";
+    if(r && r.submitted){
+      status = r.correct ? "correct" : "incorrect";
+      symbol = r.correct ? "✓" : "✕";
+    }
+    box.className = "rBox " + status;
+    box.textContent = symbol + q.q;
+    box.setAttribute("aria-label", "Question " + q.q + ": " + status);
+    box.addEventListener("click", ()=>{ jumpToReview(quizId, [q.id]); });
     grid.appendChild(box);
   });
 }
 
-function jumpTo(idx){
-  document.getElementById('resultsScreen').style.display='none';
-  document.getElementById('quizScreen').style.display='block';
-  document.getElementById('sidebar').style.display='flex';
-  current = idx;
-  render();
+function jumpToReview(quizId, ids){
+  const session = getSession(quizId);
+  session.reviewIds = ids;
+  session.current = 0;
+  saveState();
+  quizScreen.style.display = "block";
+  resultsScreen.style.display = "none";
+  buildNavGrid();
+  renderQuestionView();
 }
 
-document.getElementById('backToQuizBtn').onclick = ()=>{ jumpTo(current); };
-document.getElementById('retakeBtn').onclick = ()=>{ loadQuiz(activeQuizId); };
-document.getElementById('retakeSidebarBtn').onclick = ()=>{ loadQuiz(activeQuizId); };
+el("reviewWrongBtn").addEventListener("click", ()=>{
+  const quizId = STATE.activeQuizId;
+  const session = getSession(quizId);
+  const ids = QUIZZES[quizId].questions.filter(q=>{
+    const r = session.responses[q.id];
+    return r && r.submitted && !r.correct;
+  }).map(q=>q.id);
+  jumpToReview(quizId, ids.length ? ids : QUIZZES[quizId].questions.map(q=>q.id));
+});
+el("reviewUnansweredBtn").addEventListener("click", ()=>{
+  const quizId = STATE.activeQuizId;
+  const session = getSession(quizId);
+  const ids = QUIZZES[quizId].questions.filter(q=>{
+    const r = session.responses[q.id];
+    return !r || !r.submitted;
+  }).map(q=>q.id);
+  jumpToReview(quizId, ids.length ? ids : QUIZZES[quizId].questions.map(q=>q.id));
+});
+el("retryIncorrectBtn").addEventListener("click", ()=>{
+  const quizId = STATE.activeQuizId;
+  const session = getSession(quizId);
+  const incorrectIds = QUIZZES[quizId].questions.filter(q=>{
+    const r = session.responses[q.id];
+    return r && r.submitted && !r.correct;
+  }).map(q=>q.id);
+  if(incorrectIds.length===0){
+    jumpToReview(quizId, QUIZZES[quizId].questions.map(q=>q.id));
+    return;
+  }
+  incorrectIds.forEach(qid=>{
+    const r = getResponse(quizId, qid);
+    r.selection = [];
+    r.submitted = false;
+    r.correct = null;
+    r._revealExplain = false;
+    // attempts count is preserved intentionally
+  });
+  session.finished = false;
+  jumpToReview(quizId, incorrectIds);
+});
+el("returnToQuizBtn").addEventListener("click", ()=>{
+  const quizId = STATE.activeQuizId;
+  const session = getSession(quizId);
+  session.reviewIds = null;
+  session.current = 0;
+  saveState();
+  quizScreen.style.display = "block";
+  resultsScreen.style.display = "none";
+  buildNavGrid();
+  renderQuestionView();
+});
+el("retakeBtn").addEventListener("click", ()=>{
+  const ok = confirm("Retake this entire quiz? Your answers and submission state for this quiz will be cleared. Bookmarks and history are kept.");
+  if(!ok) return;
+  const quizId = STATE.activeQuizId;
+  const session = getSession(quizId);
+  session.responses = {};
+  session.finished = false;
+  session.reviewIds = null;
+  session.current = 0;
+  regenerateOrderAndChoices(quizId);
+  saveState();
+  quizScreen.style.display = "block";
+  resultsScreen.style.display = "none";
+  buildNavGrid();
+  renderQuestionView();
+});
 
-loadQuiz(activeQuizId);
+/* =========================================================
+   11. KEYBOARD SHORTCUTS
+========================================================= */
+function isEditableTarget(target){
+  if(!target) return false;
+  const tag = (target.tagName||"").toUpperCase();
+  return tag==="SELECT" || tag==="TEXTAREA" || (tag==="INPUT" && target.type!=="radio" && target.type!=="checkbox");
+}
+document.addEventListener("keydown", (e)=>{
+  if(resultsScreen.style.display==="block") return;
+  if(isEditableTarget(e.target)) return;
+
+  if(/^[1-9]$/.test(e.key)){
+    const idx = parseInt(e.key,10)-1;
+    const inputs = document.querySelectorAll("#qBody .choice input");
+    if(inputs[idx] && !inputs[idx].disabled){
+      inputs[idx].checked = !inputs[idx].checked;
+      inputs[idx].dispatchEvent(new Event("change", {bubbles:true}));
+    }
+    return;
+  }
+  if(e.key==="Enter"){
+    const isRadioOrCheckbox = e.target && (e.target.type==="radio" || e.target.type==="checkbox");
+    if(isRadioOrCheckbox) return; // let native activation happen
+    const submitBtn = document.querySelector("#actionRow .submitBtn");
+    if(submitBtn && !submitBtn.disabled){ submitBtn.click(); e.preventDefault(); }
+    return;
+  }
+  if(e.key==="ArrowLeft"){
+    const isFormControl = e.target && (e.target.type==="radio" || e.target.type==="checkbox");
+    if(isFormControl) return;
+    el("prevBtn").click();
+    return;
+  }
+  if(e.key==="ArrowRight"){
+    const isFormControl = e.target && (e.target.type==="radio" || e.target.type==="checkbox");
+    if(isFormControl) return;
+    el("nextBtn").click();
+    return;
+  }
+  if(e.key==="b" || e.key==="B"){
+    el("bookmarkBtn").click();
+    return;
+  }
+});
+
+/* =========================================================
+   12. INIT
+========================================================= */
+loadState();
+renderValidationBanner();
+populateQuizSelect();
+loadQuiz(STATE.activeQuizId);
+
+})();
 </script>
 </body>
 </html>
