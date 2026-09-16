@@ -54,7 +54,10 @@
     border-radius:6px; padding:9px 10px; font-family:var(--mono); font-size:13px;
   }
 
-  #progressWrap{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:12px;}
+  #scoreWrap{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:12px;}
+  #scoreWrap .row{display:flex; justify-content:space-between; margin-bottom:4px;}
+  #scoreWrap .row:last-child{margin-bottom:0;}
+  #scoreWrap .val{color:var(--accent);}
   #progressBarOuter{height:6px; background:#0a0f16; border-radius:4px; overflow:hidden; margin-top:8px; border:1px solid var(--line);}
   #progressBarInner{height:100%; width:0%; background:linear-gradient(90deg,var(--accent-dim),var(--accent)); transition:width .25s ease;}
 
@@ -66,17 +69,17 @@
     transition:all .15s ease;
   }
   .navBtn:hover{border-color:var(--accent); color:var(--text);}
-  .navBtn.answered{background:rgba(57,217,138,0.1); color:var(--accent); border-color:var(--accent-dim);}
+  .navBtn.picked{background:rgba(240,182,76,0.1); color:var(--amber); border-color:rgba(240,182,76,0.4);}
   .navBtn.current{outline:2px solid var(--accent); outline-offset:1px;}
   .navBtn.correct{background:rgba(57,217,138,0.18); color:var(--accent); border-color:var(--accent);}
   .navBtn.incorrect{background:rgba(255,107,107,0.15); color:var(--bad); border-color:var(--bad);}
 
-  #finishBtn{
-    margin-top:auto; background:var(--accent); color:#0a1510; border:none;
-    font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:.03em;
-    padding:12px; border-radius:8px; cursor:pointer; text-transform:uppercase;
+  #retakeSidebarBtn{
+    margin-top:auto; background:var(--panel-2); color:var(--text); border:1px solid var(--line);
+    font-family:var(--mono); font-weight:600; font-size:12.5px; letter-spacing:.03em;
+    padding:11px; border-radius:8px; cursor:pointer; text-transform:uppercase;
   }
-  #finishBtn:hover{filter:brightness(1.08);}
+  #retakeSidebarBtn:hover{border-color:var(--accent); color:var(--accent);}
 
   #main{flex:1; padding:36px 48px 80px; max-width:900px; margin:0 auto;}
   .qMeta{font-family:var(--mono); font-size:12px; color:var(--dim); display:flex; justify-content:space-between; margin-bottom:10px;}
@@ -94,7 +97,7 @@
     border-radius:6px; padding:8px 10px; margin:-6px 0 14px;
   }
 
-  .choiceList{display:flex; flex-direction:column; gap:8px; margin-bottom:8px;}
+  .choiceList{display:flex; flex-direction:column; gap:8px; margin-bottom:16px;}
   .choice{
     display:flex; gap:12px; align-items:flex-start; background:var(--panel);
     border:1px solid var(--line); border-radius:8px; padding:12px 14px; cursor:pointer;
@@ -106,12 +109,22 @@
   .choice.selected{border-color:var(--accent); background:rgba(57,217,138,0.06);}
   .choice.showCorrect{border-color:var(--accent); background:rgba(57,217,138,0.14);}
   .choice.showWrong{border-color:var(--bad); background:rgba(255,107,107,0.1);}
+  .choice.locked{cursor:default;}
 
-  #feedbackBox{margin-top:16px; padding:12px 14px; border-radius:8px; font-family:var(--mono); font-size:13px; display:none;}
+  #submitRow{margin-bottom:6px;}
+  #submitBtn{
+    font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:.03em;
+    padding:11px 22px; border-radius:8px; border:none;
+    background:var(--accent); color:#0a1510; cursor:pointer; text-transform:uppercase;
+  }
+  #submitBtn:hover{filter:brightness(1.08);}
+  #submitBtn:disabled{opacity:.35; cursor:not-allowed; filter:none;}
+
+  #feedbackBox{margin-top:4px; margin-bottom:8px; padding:12px 14px; border-radius:8px; font-family:var(--mono); font-size:13px; display:none;}
   #feedbackBox.ok{display:block; background:rgba(57,217,138,0.1); border:1px solid var(--accent-dim); color:var(--accent);}
   #feedbackBox.bad{display:block; background:rgba(255,107,107,0.08); border:1px solid var(--bad-dim); color:var(--bad);}
 
-  .navRow{display:flex; justify-content:space-between; margin-top:28px; gap:12px;}
+  .navRow{display:flex; justify-content:space-between; margin-top:22px; gap:12px;}
   .navRow button{
     font-family:var(--mono); font-size:13px; padding:11px 20px; border-radius:8px;
     border:1px solid var(--line); background:var(--panel-2); color:var(--text); cursor:pointer;
@@ -133,6 +146,7 @@
   }
   .rBox.correct{background:rgba(57,217,138,0.18); color:var(--accent); border-color:var(--accent);}
   .rBox.incorrect{background:rgba(255,107,107,0.15); color:var(--bad); border-color:var(--bad);}
+  .rBox.unattempted{background:var(--panel-2); color:var(--dim); border-color:var(--line);}
   .actionsRow{display:flex; gap:12px; justify-content:center;}
   .actionsRow button{
     font-family:var(--mono); font-size:13px; padding:12px 22px; border-radius:8px;
@@ -163,16 +177,15 @@
     <select id="quizSelect"></select>
   </div>
 
-  <div id="progressWrap">
-    <div style="display:flex;justify-content:space-between;">
-      <span>ANSWERED</span><span id="progressText">0 / 0</span>
-    </div>
+  <div id="scoreWrap">
+    <div class="row"><span>CHECKED</span><span class="val" id="checkedText">0 / 0</span></div>
+    <div class="row"><span>CORRECT</span><span class="val" id="correctText">0</span></div>
     <div id="progressBarOuter"><div id="progressBarInner"></div></div>
   </div>
 
   <div id="navGrid"></div>
 
-  <button id="finishBtn">Grade Quiz ▸</button>
+  <button id="retakeSidebarBtn">↺ Reset Quiz</button>
 </div>
 
 <div id="main">
@@ -187,6 +200,10 @@
     <pre class="code" id="qCode" style="display:none;"></pre>
     <div id="qFlag" class="flagNote" style="display:none;"></div>
     <div id="qBody"></div>
+
+    <div id="submitRow">
+      <button id="submitBtn" disabled>Submit Answer</button>
+    </div>
     <div id="feedbackBox"></div>
 
     <div class="navRow">
@@ -202,7 +219,7 @@
     </div>
     <div class="resultsGrid" id="resultsGrid"></div>
     <div class="actionsRow">
-      <button class="primary" id="reviewWrongBtn">Review Missed Questions</button>
+      <button class="primary" id="backToQuizBtn">Back to Quiz</button>
       <button id="retakeBtn">Retake Quiz</button>
     </div>
   </div>
@@ -364,17 +381,20 @@ const QUIZZES = {
 
 /* =========================================================
    APP LOGIC
+   Each question is checked individually via a Submit button —
+   no end-of-quiz bulk grading.
 ========================================================= */
 let activeQuizId = Object.keys(QUIZZES)[0];
 let Q = QUIZZES[activeQuizId].questions;
 let TOTAL = Q.length;
 let current = 0;
-let answers = {};
-let graded = false;
-let gradeResults = {};
+let answers = {};      // q# -> selected value(s), pre-submit or post-submit
+let submitted = {};    // q# -> bool, has this question been checked
+let results = {};      // q# -> bool, correct or not (only valid if submitted)
 
 const navGrid = document.getElementById('navGrid');
-const progressText = document.getElementById('progressText');
+const checkedText = document.getElementById('checkedText');
+const correctText = document.getElementById('correctText');
 const progressBarInner = document.getElementById('progressBarInner');
 const quizSelect = document.getElementById('quizSelect');
 const brandTitle = document.getElementById('brandTitle');
@@ -391,9 +411,7 @@ function populateQuizSelect(){
 }
 populateQuizSelect();
 
-quizSelect.onchange = ()=>{
-  loadQuiz(quizSelect.value);
-};
+quizSelect.onchange = ()=>{ loadQuiz(quizSelect.value); };
 
 function loadQuiz(id){
   activeQuizId = id;
@@ -401,9 +419,8 @@ function loadQuiz(id){
   TOTAL = Q.length;
   current = 0;
   answers = {};
-  graded = false;
-  gradeResults = {};
-  document.getElementById('main').scrollTop = 0;
+  submitted = {};
+  results = {};
   loadedCount.textContent = TOTAL;
   document.getElementById('resultsScreen').style.display='none';
   document.getElementById('quizScreen').style.display='block';
@@ -423,27 +440,44 @@ function buildNav(){
   });
 }
 
-function isAnswered(q){
+function hasSelection(q){
   const a = answers[q.q];
-  if(a===undefined) return false;
   if(q.type==='single') return !!a;
   if(q.type==='multi') return a && a.length>0;
   return false;
 }
 
-function updateProgress(){
-  const answeredCount = Q.filter(isAnswered).length;
-  progressText.textContent = answeredCount + ' / ' + TOTAL;
-  progressBarInner.style.width = (answeredCount/TOTAL*100) + '%';
+function updateSidebar(){
+  const checkedCount = Q.filter(q=>submitted[q.q]).length;
+  const correctCount = Q.filter(q=>submitted[q.q] && results[q.q]).length;
+  checkedText.textContent = checkedCount + ' / ' + TOTAL;
+  correctText.textContent = correctCount;
+  progressBarInner.style.width = (checkedCount/TOTAL*100) + '%';
   const btns = navGrid.children;
   Q.forEach((qq,i)=>{
-    btns[i].classList.toggle('answered', isAnswered(qq));
+    btns[i].classList.remove('picked','correct','incorrect');
+    if(submitted[qq.q]){
+      btns[i].classList.add(results[qq.q] ? 'correct' : 'incorrect');
+    } else if(hasSelection(qq)){
+      btns[i].classList.add('picked');
+    }
     btns[i].classList.toggle('current', i===current);
   });
 }
 
 function typeLabel(t){
   return {single:'SINGLE CHOICE', multi:'MULTI SELECT'}[t];
+}
+
+function gradeQuestion(q){
+  const a = answers[q.q];
+  if(q.type==='single') return a===q.ans;
+  if(q.type==='multi'){
+    if(!a || a.length!==q.ans.length) return false;
+    const s1=[...a].sort().join(','); const s2=[...q.ans].sort().join(',');
+    return s1===s2;
+  }
+  return false;
 }
 
 function render(){
@@ -462,21 +496,23 @@ function render(){
 
   const body = document.getElementById('qBody');
   body.innerHTML='';
+  const isLocked = !!submitted[q.q];
 
   if(q.type==='single'){
     const wrap = document.createElement('div'); wrap.className='choiceList';
     q.opts.forEach(([k,v])=>{
-      const div = document.createElement('label'); div.className='choice';
+      const div = document.createElement('label'); div.className='choice' + (isLocked ? ' locked' : '');
       div.innerHTML = '<input type="radio" name="single'+q.q+'"><span class="txt"></span>';
       div.querySelector('.txt').textContent = v;
       const input = div.querySelector('input');
       input.checked = answers[q.q]===k;
-      if(answers[q.q]===k) div.classList.add('selected');
-      input.onchange = ()=>{ answers[q.q]=k; updateProgress(); render(); };
+      input.disabled = isLocked;
+      if(answers[q.q]===k && !isLocked) div.classList.add('selected');
+      input.onchange = ()=>{ answers[q.q]=k; refreshSubmitState(); render(); };
       wrap.appendChild(div);
     });
     body.appendChild(wrap);
-    if(graded) applySingleFeedback(q, wrap);
+    if(isLocked) applySingleFeedback(q, wrap);
   }
 
   if(q.type==='multi'){
@@ -486,42 +522,53 @@ function render(){
     const wrap = document.createElement('div'); wrap.className='choiceList';
     if(!answers[q.q]) answers[q.q]=[];
     q.opts.forEach(([k,v])=>{
-      const div = document.createElement('label'); div.className='choice';
+      const div = document.createElement('label'); div.className='choice' + (isLocked ? ' locked' : '');
       div.innerHTML = '<input type="checkbox"><span class="txt"></span>';
       div.querySelector('.txt').textContent = v;
       const input = div.querySelector('input');
       input.checked = answers[q.q].includes(k);
-      if(input.checked) div.classList.add('selected');
+      input.disabled = isLocked;
+      if(input.checked && !isLocked) div.classList.add('selected');
       input.onchange = ()=>{
         let arr = answers[q.q];
         if(input.checked){ arr.push(k); } else { arr = arr.filter(x=>x!==k); }
         answers[q.q]=arr;
-        updateProgress(); render();
+        refreshSubmitState(); render();
       };
       wrap.appendChild(div);
     });
     body.appendChild(wrap);
-    if(graded) applyMultiFeedback(q, wrap);
+    if(isLocked) applyMultiFeedback(q, wrap);
   }
 
+  const submitBtn = document.getElementById('submitBtn');
   const fb = document.getElementById('feedbackBox');
   fb.className=''; fb.innerHTML='';
-  if(graded){
-    const correct = gradeResults[q.q];
+
+  if(isLocked){
+    submitBtn.style.display='none';
+    const correct = results[q.q];
     fb.className = correct ? 'ok':'bad';
-    fb.textContent = correct ? '✔ Correct.' : '✘ Not quite — the correct answer is highlighted above.';
+    fb.textContent = correct ? '✔ Correct!' : '✘ Not quite — the correct answer is highlighted above.';
+  } else {
+    submitBtn.style.display='inline-block';
+    submitBtn.disabled = !hasSelection(q);
   }
 
   document.getElementById('prevBtn').disabled = current===0;
   document.getElementById('nextBtn').textContent = current===TOTAL-1 ? 'Finish ▸' : 'Next ▸';
-  updateProgress();
+  updateSidebar();
+}
+
+function refreshSubmitState(){
+  const q = Q[current];
+  document.getElementById('submitBtn').disabled = !hasSelection(q);
 }
 
 function applySingleFeedback(q, wrap){
   const labels = wrap.querySelectorAll('.choice');
   labels.forEach((div,i)=>{
     const k = q.opts[i][0];
-    div.querySelector('input').disabled = true;
     if(k===q.ans) div.classList.add('showCorrect');
     else if(answers[q.q]===k) div.classList.add('showWrong');
   });
@@ -530,61 +577,53 @@ function applyMultiFeedback(q, wrap){
   const labels = wrap.querySelectorAll('.choice');
   labels.forEach((div,i)=>{
     const k = q.opts[i][0];
-    div.querySelector('input').disabled = true;
     const chosen = answers[q.q].includes(k);
     if(q.ans.includes(k)) div.classList.add('showCorrect');
     else if(chosen) div.classList.add('showWrong');
   });
 }
 
+document.getElementById('submitBtn').onclick = ()=>{
+  const q = Q[current];
+  if(!hasSelection(q)) return;
+  submitted[q.q] = true;
+  results[q.q] = gradeQuestion(q);
+  render();
+};
+
 document.getElementById('prevBtn').onclick = ()=>{ if(current>0){ current--; render(); } };
 document.getElementById('nextBtn').onclick = ()=>{
   if(current<TOTAL-1){ current++; render(); }
-  else { gradeQuiz(); }
+  else { showResults(); }
 };
-document.getElementById('finishBtn').onclick = gradeQuiz;
 
-function gradeQuestion(q){
-  const a = answers[q.q];
-  if(q.type==='single') return a===q.ans;
-  if(q.type==='multi'){
-    if(!a || a.length!==q.ans.length) return false;
-    const s1=[...a].sort().join(','); const s2=[...q.ans].sort().join(',');
-    return s1===s2;
-  }
-  return false;
-}
-
-function gradeQuiz(){
-  graded = true;
-  let correctCount = 0;
-  Q.forEach(q=>{
-    const ok = gradeQuestion(q);
-    gradeResults[q.q]=ok;
-    if(ok) correctCount++;
-  });
-  showResults(correctCount);
-}
-
-function showResults(correctCount){
+function showResults(){
   document.getElementById('quizScreen').style.display='none';
   document.getElementById('resultsScreen').style.display='block';
   document.getElementById('sidebar').style.display='none';
-  const pct = Math.round(correctCount/TOTAL*100);
+
+  const checkedCount = Q.filter(q=>submitted[q.q]).length;
+  const correctCount = Q.filter(q=>submitted[q.q] && results[q.q]).length;
+  const pct = checkedCount>0 ? Math.round(correctCount/checkedCount*100) : 0;
+
   document.getElementById('scoreBig').textContent = pct+'%';
-  document.getElementById('scoreSub').textContent = correctCount+' of '+TOTAL+' correct';
+  document.getElementById('scoreSub').textContent =
+    correctCount+' of '+checkedCount+' checked correct' + (checkedCount<TOTAL ? '  ·  '+(TOTAL-checkedCount)+' not attempted' : '');
+
   const grid = document.getElementById('resultsGrid');
   grid.innerHTML='';
   Q.forEach(q=>{
     const box = document.createElement('div');
-    box.className = 'rBox ' + (gradeResults[q.q] ? 'correct':'incorrect');
+    let cls = 'unattempted';
+    if(submitted[q.q]) cls = results[q.q] ? 'correct' : 'incorrect';
+    box.className = 'rBox ' + cls;
     box.textContent = q.q;
-    box.onclick = ()=>{ jumpToReview(q.q-1); };
+    box.onclick = ()=>{ jumpTo(q.q-1); };
     grid.appendChild(box);
   });
 }
 
-function jumpToReview(idx){
+function jumpTo(idx){
   document.getElementById('resultsScreen').style.display='none';
   document.getElementById('quizScreen').style.display='block';
   document.getElementById('sidebar').style.display='flex';
@@ -592,17 +631,9 @@ function jumpToReview(idx){
   render();
 }
 
-document.getElementById('reviewWrongBtn').onclick = ()=>{
-  const firstWrong = Q.findIndex(q=>!gradeResults[q.q]);
-  jumpToReview(firstWrong===-1?0:firstWrong);
-};
-document.getElementById('retakeBtn').onclick = ()=>{
-  answers = {}; graded=false; gradeResults={}; current=0;
-  document.getElementById('resultsScreen').style.display='none';
-  document.getElementById('quizScreen').style.display='block';
-  document.getElementById('sidebar').style.display='flex';
-  render();
-};
+document.getElementById('backToQuizBtn').onclick = ()=>{ jumpTo(current); };
+document.getElementById('retakeBtn').onclick = ()=>{ loadQuiz(activeQuizId); };
+document.getElementById('retakeSidebarBtn').onclick = ()=>{ loadQuiz(activeQuizId); };
 
 loadQuiz(activeQuizId);
 </script>
