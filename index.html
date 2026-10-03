@@ -609,8 +609,149 @@ const QUIZZES = {
        ["C","Mixing all logic into a single layer"],["D","Ignoring maintainability for faster development"]], ans:"B",
  explain:"Separation of concerns — keeping layers independent — is a core principle of Clean Architecture."}
   ]
+},
+
+"module3": {
+  title: "Module 3 — Git & GitHub",
+  questions: [
+{id:"m3-01",q:1,type:"single",topic:"Git Branches",difficulty:"Easy",source:"Module 3",
+ stem:"Which of the following is TRUE about a Git branch?",
+ opts:[["A","It is used only for documentation purposes"],
+       ["B","It is a copy of a repository stored in another folder"],
+       ["C","It is the staging area before commits are finalized"],
+       ["D","It represents an independent line of development"]], ans:"D",
+ explain:"A Git branch represents an independent line of development within a repository."},
+
+{id:"m3-02",q:2,type:"single",topic:"Git Commits",difficulty:"Easy",source:"Module 3",
+ stem:"Once a commit is pushed to GitHub, it can never be modified or reverted.",
+ opts:[["A","True"],["B","False"]], ans:"B",
+ explain:"A pushed commit can be reverted, and history can also be rewritten when appropriate."},
+
+{id:"m3-03",q:3,type:"single",topic:"Version Control",difficulty:"Easy",source:"Module 3",
+ stem:"Git can only be used for programming projects; it cannot track changes in other file types.",
+ opts:[["A","True"],["B","False"]], ans:"B",
+ explain:"Git can track changes in many kinds of files, not only programming source code."},
+
+{id:"m3-04",q:4,type:"single",topic:"Merge Conflicts",difficulty:"Medium",source:"Module 3",
+ stem:"Merge conflicts must always be resolved manually by the developer.",
+ opts:[["A","True"],["B","False"]], ans:"A",
+ explain:"When Git reports a merge conflict, a developer must decide how the conflicting changes should be combined."},
+
+{id:"m3-05",q:5,type:"single",topic:"Collaboration",difficulty:"Easy",source:"Module 3",
+ stem:"Collaboration through GitHub is possible because:",
+ opts:[["A","GitHub removes the need for commits"],
+       ["B","All developers work only on the same local machine"],
+       ["C","Git automatically prevents all conflicts"],
+       ["D","Changes can be pushed to a shared remote repository and merged"]], ans:"D",
+ explain:"GitHub hosts shared remote repositories where collaborators can push and merge changes."},
+
+{id:"m3-06",q:6,type:"single",topic:"Version Control",difficulty:"Easy",source:"Module 3",
+ stem:"Which of the following best describes version control?",
+ opts:[["A","A system for automatically compiling code"],
+       ["B","A programming language feature for managing memory"],
+       ["C","A debugging tool for detecting errors in code"],
+       ["D","A system for tracking changes to files and coordinating work among developers"]], ans:"D",
+ explain:"Version control records file changes and helps multiple developers coordinate their work."},
+
+{id:"m3-07",q:7,type:"single",topic:"Git Commands",difficulty:"Easy",source:"Module 3",
+ stem:"git pull downloads and merges changes from a remote repository into the local branch.",
+ opts:[["A","False"],["B","True"]], ans:"B",
+ explain:"git pull fetches remote changes and integrates them into the current local branch."},
+
+{id:"m3-08",q:8,type:"single",topic:"Repositories",difficulty:"Easy",source:"Module 3",
+ stem:"A remote repository is a version of the project hosted on a server, usually used for collaboration.",
+ opts:[["A","True"],["B","False"]], ans:"A",
+ explain:"A remote repository is hosted outside the local computer and is commonly used to share work."},
+
+{id:"m3-09",q:9,type:"single",topic:"Repositories",difficulty:"Easy",source:"Module 3",
+ stem:"A Git repository can only exist online; it cannot be created locally.",
+ opts:[["A","True"],["B","False"]], ans:"B",
+ explain:"A Git repository can be created and used entirely on a local computer."},
+
+{id:"m3-10",q:10,type:"single",topic:"Staging Area",difficulty:"Easy",source:"Module 3",
+ stem:"The staging area in Git is where files are prepared before being committed.",
+ opts:[["A","False"],["B","True"]], ans:"B",
+ explain:"The staging area holds the changes selected for inclusion in the next commit."},
+
+{id:"m3-11",q:11,type:"single",topic:"Git Commands",difficulty:"Easy",source:"Module 3",
+ stem:"The command git push origin main does what?",
+ opts:[["A","Pushes local changes to the remote repository’s main branch"],
+       ["B","Creates a new branch called origin"],
+       ["C","Deletes the remote branch"],
+       ["D","Saves changes locally without uploading them"]], ans:"A",
+ explain:"The command sends local main-branch commits to the remote named origin."},
+
+{id:"m3-12",q:12,type:"single",topic:"Git Commands",difficulty:"Easy",source:"Module 3",
+ stem:"In Git, what does the command git status do?",
+ opts:[["A","Displays the current state of the working directory and staging area"],
+       ["B","Pushes changes to the remote repository"],
+       ["C","Deletes the repository"],
+       ["D","Shows the list of all commits in history"]], ans:"A",
+ explain:"git status reports tracked, modified, staged, and untracked files in the working tree."},
+
+{id:"m3-13",q:13,type:"single",topic:"Git Commits",difficulty:"Easy",source:"Module 3",
+ stem:"Every commit in Git is identified by a unique hash.",
+ opts:[["A","True"],["B","False"]], ans:"A",
+ explain:"Git identifies each commit using a hash derived from the commit’s contents and metadata."},
+
+{id:"m3-14",q:14,type:"single",topic:"Git Commits",difficulty:"Easy",source:"Module 3",
+ stem:"What is the local history of changes in Git called?",
+ opts:[["A","Branch"],["B","Repository"],["C","Commit"],["D","Clone"]], ans:"C",
+ explain:"A commit is a recorded snapshot in the project’s local history."},
+
+{id:"m3-15",q:15,type:"single",topic:"Git Hosting",difficulty:"Easy",source:"Module 3",
+ stem:"Which of these is NOT a common Git hosting service?",
+ opts:[["A","GitLab"],["B","Stack Overflow"],["C","Bitbucket"],["D","GitHub"]], ans:"B",
+ explain:"Stack Overflow is a question-and-answer site, while GitHub, GitLab, and Bitbucket host Git repositories."},
+
+{id:"m3-16",q:16,type:"single",topic:"Git Commands",difficulty:"Easy",source:"Module 3",
+ stem:"Which Git command creates a copy of a remote repository on your computer?",
+ opts:[["A","git pull"],["B","git commit"],["C","git init"],["D","git clone"]], ans:"D",
+ explain:"git clone downloads a remote repository and creates a local working copy."},
+
+{id:"m3-17",q:17,type:"single",topic:"Git Commands",difficulty:"Easy",source:"Module 3",
+ stem:"What does git log display?",
+ opts:[["A","The history of commits in the repository"],
+       ["B","The current status of branches"],
+       ["C","The changes staged for the next commit"],
+       ["D","The list of files currently tracked"]], ans:"A",
+ explain:"git log displays the repository’s commit history."},
+
+{id:"m3-18",q:18,type:"single",topic:"Pull Requests",difficulty:"Easy",source:"Module 3",
+ stem:"What is the purpose of a pull request in GitHub?",
+ opts:[["A","To delete changes from the repository"],
+       ["B","To request permission to clone a repository"],
+       ["C","To suggest changes that can be reviewed and merged into a branch"],
+       ["D","To initialize a new Git project"]], ans:"C",
+ explain:"A pull request presents proposed changes for discussion, review, and possible merging."},
+
+{id:"m3-19",q:19,type:"single",topic:"Merge Conflicts",difficulty:"Medium",source:"Module 3",
+ stem:"A merge conflict happens when:",
+ opts:[["A","GitHub is offline"],
+       ["B","The internet connection is lost during push"],
+       ["C","Two users make changes to the same line of a file in different branches"],
+       ["D","Two users delete the same file"]], ans:"C",
+ explain:"Conflicting edits to the same part of a file can prevent Git from merging automatically."},
+
+{id:"m3-20",q:20,type:"single",topic:"Git Commands",difficulty:"Easy",source:"Module 3",
+ stem:"The command git init is used to:",
+ opts:[["A","Download a project from GitHub"],
+       ["B","Merge two branches"],
+       ["C","Start tracking changes in a new local repository"],
+       ["D","Undo the last commit"]], ans:"C",
+ explain:"git init creates a new local Git repository in the current directory."}
+  ]
 }
 
+};
+
+const moduleQuizIds = Object.keys(QUIZZES);
+QUIZZES["all-modules"] = {
+  title: "All Modules — 53 Questions",
+  questions: moduleQuizIds.flatMap(id => QUIZZES[id].questions).map((question, index) => ({
+    ...question,
+    q: index + 1
+  }))
 };
 
 /* =========================================================
