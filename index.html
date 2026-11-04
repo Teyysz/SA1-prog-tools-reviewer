@@ -399,6 +399,12 @@
    (ids, topic, difficulty, source, and explain added;
     original stems, options, and answer keys unchanged)
 ========================================================= */
+const MCQ = (id,q,topic,difficulty,source,stem,choices,correctIndex,explain) => ({
+  id,q,type:"single",topic,difficulty,source,stem,
+  opts:choices.map((choice,index)=>[String.fromCharCode(65+index),choice]),
+  ans:String.fromCharCode(65+correctIndex),explain
+});
+
 const QUIZZES = {
 
 "1732168": {
@@ -741,13 +747,74 @@ const QUIZZES = {
        ["D","Undo the last commit"]], ans:"C",
  explain:"git init creates a new local Git repository in the current directory."}
   ]
+},
+
+"module4": {
+  title: "Module 4 — APIs, HTTP & Software Testing",
+  questions: [
+MCQ("m4-01",1,"HTTP Methods","Easy","Module 4 assessment","The GET method is used to retrieve specific data from the API.",["False","True"],1,"GET requests retrieve a resource or representation from an API without being intended to modify it."),
+MCQ("m4-02",2,"HTTP Methods","Easy","Module 4 assessment","Which of the following is NOT an HTTP method?",["SEND","GET","POST","DELETE"],0,"SEND is not a standard HTTP method; GET, POST, and DELETE are."),
+MCQ("m4-03",3,"HTTP Methods","Easy","Module 4 assessment","Which HTTP method is commonly used to retrieve data from an API?",["DELETE","PUT","GET","POST"],2,"GET is the standard method used to retrieve data."),
+MCQ("m4-04",4,"API Fundamentals","Easy","Module 4 assessment","The digital location where an API receives requests about its resources is called endpoints.",["True","False"],0,"An endpoint is a specific API location where requests for a resource or operation are received."),
+MCQ("m4-05",5,"HTTP Methods","Medium","Module 4 assessment","What is the difference between PUT and PATCH requests?",["PATCH deletes the resource","PUT and PATCH are identical","PUT replaces the entire resource, PATCH updates only part of it","PUT updates part of a resource, PATCH replaces all of it"],2,"PUT normally replaces the complete resource representation, while PATCH applies a partial update."),
+MCQ("m4-06",6,"Software Testing","Easy","Module 4 assessment","What is the main purpose of software testing?",["To replace the need for code reviews","To reduce the size of the code","To prove that the software works perfectly","To identify bugs and ensure software meets requirements"],3,"Testing finds defects and checks whether the software behaves according to its requirements."),
+MCQ("m4-07",7,"Integration Testing","Medium","Module 4 assessment","Integration testing is done to verify the system as a whole meets the requirements?",["False","True"],0,"Integration testing checks interactions between components. System testing evaluates the complete system against requirements."),
+MCQ("m4-08",8,"Unit Testing","Easy","Module 4 assessment","Which type of testing focuses on testing individual components or functions of a program?",["Unit Testing","Acceptance Testing","Integration Testing","System Testing"],0,"Unit testing isolates and verifies small units such as individual functions or classes."),
+MCQ("m4-09",9,"Functional Testing","Medium","Module 4 assessment","Which of the following is NOT a functional test?",["Testing a login API endpoint returns the correct response","Measuring how fast the system responds under heavy load","Validating that a file upload works as expected","Checking if a shopping cart correctly updates its total"],1,"Response speed under heavy load is performance testing, which is non-functional."),
+MCQ("m4-10",10,"Automated Testing","Easy","Module 4 assessment","Which of the following is a benefit of automated testing?",["Faster and repeatable test execution","Removes the need for documentation","Reduces the need for developers","Guarantees no bugs exist"],0,"Automated tests can be run quickly and consistently many times."),
+MCQ("m4-11",11,"API Requests","Medium","Module 4 assessment","What happens if you send invalid JSON in a POST request body?",["The response will still be successful","The request is ignored","The server automatically fixes it","The request will usually fail or return a 400 Bad Request"],3,"A server normally rejects malformed request syntax with a client-error response such as 400 Bad Request."),
+MCQ("m4-12",12,"HTTP Status Codes","Easy","Module 4 assessment","What does the 500 status code mean?",["Bad Request","Server Error","Timeout","Not Found"],1,"HTTP 500 means Internal Server Error."),
+MCQ("m4-13",13,"System Testing","Easy","Module 4 assessment","Which type of testing validates the entire system end-to-end against requirements?",["System testing","Debugging","Unit testing","Functional testing"],0,"System testing checks the fully integrated system against its specified requirements."),
+MCQ("m4-14",14,"Integration Testing","Easy","Module 4 assessment","Which type of testing focuses on the interaction between multiple modules or components?",["Integration testing","Unit testing","Regression testing","Performance testing"],0,"Integration testing verifies that combined modules communicate and work together correctly."),
+MCQ("m4-15",15,"HTTP Status Codes","Easy","Module 4 assessment","What does an HTTP response code 200 OK mean?",["Request failed due to server error","Resource not found","Request was successful","Unauthorized access"],2,"HTTP 200 indicates that the request completed successfully."),
+MCQ("m4-16",16,"API Fundamentals","Easy","Module 4 assessment","It is the process of making a request from an API.",["Endpoint","API Key","Status Code","API Call"],3,"An API call is a request made by one program to an API.")
+  ]
+},
+
+"module5": {
+  title: "Module 5 — Software Documentation",
+  questions: [
+MCQ("m5-01",1,"Documentation Fundamentals","Easy","Module 5 assessment","What is software documentation?",["A collection of user passwords","A replacement for software testing","The practice of describing how software is built, used, and maintained","A list of programming languages used by a company"],2,"Software documentation records information needed to understand, use, develop, and maintain software."),
+MCQ("m5-02",2,"Documentation Ethics","Medium","Module 5 assessment","What should be included when copied code is used, according to the module's best practices?",["A link to the original source","A replacement programming language","Nothing, because the source is not relevant","Only the author's name without a source"],0,"Copied code should be attributed with a reference or link to its original source."),
+MCQ("m5-03",3,"User Documentation","Easy","Module 5 assessment","How does documentation support users?",["It provides clear guides and promotes self-service learning","It removes all software features","It requires users to contact support for every task","It prevents users from learning software features"],0,"Clear instructions let users solve common problems and learn features independently."),
+MCQ("m5-04",4,"Module Objectives","Easy","Module 5 assessment","Which objective is explicitly stated for Module 5?",["Designing network hardware","Developing new programming languages","Producing clear and structured technical documentation","Replacing all written documentation with videos"],2,"The module focuses on producing understandable and organized technical documentation."),
+MCQ("m5-05",5,"Architecture Documentation","Easy","Module 5 assessment","What is the focus of architectural documentation?",["Detailed line-by-line code only","User billing information","System design, components, and data flow","Marketing slogans"],2,"Architectural documentation explains the system's major structure, components, relationships, and data movement."),
+MCQ("m5-06",6,"Release Notes","Easy","Module 5 assessment","What do release notes primarily communicate?",["Only programming assignments","Only user passwords","New features, updates, bug fixes, and improvements","Only system architecture"],2,"Release notes summarize what changed in a particular software release."),
+MCQ("m5-07",7,"Training & Onboarding","Easy","Module 5 assessment","What is one benefit of documentation for training and onboarding?",["It makes new team members understand project structure and logic more quickly","It prevents collaboration among team members","It replaces the software itself","It removes the need for any training"],0,"Good documentation reduces the time needed for newcomers to understand a project."),
+MCQ("m5-08",8,"Compliance","Medium","Module 5 assessment","How can software documentation support regulation and compliance?",["By ensuring software meets industry standards and legal requirements","By eliminating the need for standards","By limiting software to one user","By preventing all software updates"],0,"Documentation can demonstrate how the system follows applicable standards, policies, and legal requirements."),
+MCQ("m5-09",9,"Process Documentation","Easy","Module 5 assessment","What does process documentation outline?",["Only source code comments","Step-by-step workflows or Standard Operating Procedures (SOPs)","Only software pricing","Only API endpoints"],1,"Process documentation describes repeatable workflows and procedures."),
+MCQ("m5-10",10,"Code Comments","Medium","Module 5 assessment","What should developers do when fixing bugs, according to the code-comment guidelines?",["Avoid documenting the fix","Rewrite all documentation from scratch","Remove all comments","Add comments when fixing bugs"],3,"A useful comment can explain a non-obvious bug fix and why it was necessary."),
+MCQ("m5-11",11,"API Documentation","Easy","Module 5 assessment","Which item is specifically associated with API documentation?",["Payroll records","Employee vacation schedules","Endpoint details","Office seating charts"],2,"API documentation describes endpoints, methods, parameters, authentication, and responses."),
+MCQ("m5-12",12,"Knowledge Transfer","Easy","Module 5 assessment","Which statement best describes knowledge transfer through documentation?",["It only records software prices","It hides design decisions from future developers","It shares insights among developers, maintainers, and stakeholders","It eliminates the need for maintenance"],2,"Documentation preserves knowledge so it can be understood and reused by others."),
+MCQ("m5-13",13,"Code Comments","Medium","Module 5 assessment","Which statement reflects a best practice for code comments?",["Comments should intentionally create confusion","Comments should not duplicate the code","Every line of code must have a comment","Comments should make unclear code acceptable"],1,"Good comments explain intent or reasoning instead of restating obvious code."),
+MCQ("m5-14",14,"Documentation Tools","Easy","Module 5 assessment","Which set of tools is named in the module as useful for collaborating on documentation?",["Only image-editing software","Only spreadsheets and calculators","Only presentation software","Markdown, Confluence, or Git"],3,"Markdown, Confluence, and Git can support collaborative, versioned documentation.")
+  ]
+},
+
+"module6": {
+  title: "Module 6 — Modern Software Design Techniques",
+  questions: [
+MCQ("m6-01",1,"Module Overview","Easy","Module 6 assessment","The chapter is titled:",["Software Testing","Modern Software Design Techniques","Programming Basics","Computer Networks"],1,"The Module 6 chapter is titled Modern Software Design Techniques."),
+MCQ("m6-02",2,"Version Control","Easy","Module 6 assessment","Version control systems help teams manage changes to:",["Source code","Operating systems","Networks","Hardware"],0,"Version control records and coordinates changes made to source code and related project files."),
+MCQ("m6-03",3,"Git Fundamentals","Easy","Module 6 assessment","Git is known for being:",["Slow but reliable","Graphical only","Large and complex","Fast and efficient"],3,"Git was designed to handle version-control operations efficiently."),
+MCQ("m6-04",4,"Git Fundamentals","Easy","Module 6 assessment","Git is described as:",["A mature, actively maintained open source project","Commercial software","A database","Cloud-only software"],0,"Git is an established open-source project that continues to be maintained."),
+MCQ("m6-05",5,"Git History","Easy","Module 6 assessment","Who originally developed Git?",["Linus Torvalds","Guido van Rossum","Bjarne Stroustrup","James Gosling"],0,"Linus Torvalds created Git for Linux kernel development."),
+MCQ("m6-06",6,"Test-Driven Development","Easy","Module 6 assessment","Students should be able to apply TDD in:",["UI animation","Writing and testing simple code","Database backup","Web hosting"],1,"TDD is practiced by writing tests and using them to guide the implementation of code."),
+MCQ("m6-07",7,"Git History","Easy","Module 6 assessment","Git was originally developed in:",["1995","2000","2010","2005"],3,"Git was created in 2005."),
+MCQ("m6-08",8,"Version Control","Easy","Module 6 assessment","What is the primary focus of version control?",["Tracking and managing changes to software code","Creating user interfaces","Compiling programs","Designing databases"],0,"Version control preserves change history and supports coordination between contributors."),
+MCQ("m6-09",9,"Module Overview","Easy","Module 6 assessment","The module number is:",["7","6","5","4"],1,"Modern Software Design Techniques is presented as Module 6."),
+MCQ("m6-10",10,"Git History","Easy","Module 6 assessment","Linus Torvalds is famous for creating the:",["Windows","Java","GitHub","Linux kernel"],3,"Linus Torvalds created the Linux kernel and later developed Git."),
+MCQ("m6-11",11,"Git Fundamentals","Easy","Module 6 assessment","Git is:",["Open source and free","Browser-only","Windows-only","Paid only"],0,"Git is free and open-source software available on multiple operating systems."),
+MCQ("m6-12",12,"Distributed Version Control","Medium","Module 6 assessment","Git can work as:",["Only a server","Only a client","A standalone program, a client, or a server","A web browser"],2,"Git can be used locally on its own and can exchange repository data in client or server workflows."),
+MCQ("m6-13",13,"Distributed Version Control","Medium","Module 6 assessment","Git does not depend on:",["Text editors","A centralized server","An internet connection","Repositories"],1,"Git is distributed, so each clone can contain the complete repository history without depending on one central server.")
+  ]
 }
 
 };
 
 const moduleQuizIds = Object.keys(QUIZZES);
 QUIZZES["all-modules"] = {
-  title: "All Modules — 53 Questions",
+  title: "All Modules — " + moduleQuizIds.reduce((total,id)=>total+QUIZZES[id].questions.length,0) + " Questions",
   questions: moduleQuizIds.flatMap(id => QUIZZES[id].questions).map((question, index) => ({
     ...question,
     q: index + 1
