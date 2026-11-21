@@ -980,7 +980,13 @@ function loadState(){
     if(!STATE.stats[quizId]) STATE.stats[quizId] = newStats();
     // fallbacks for sessions saved before a schema field existed
     const s = STATE.sessions[quizId];
-    if(!s.order || !s.order.length) s.order = QUIZZES[quizId].questions.map(q=>q.id);
+    // Refresh saved navigation when questions are added or changed. Older
+    // browser sessions may still contain the previous question count.
+    const currentQuestionIds = QUIZZES[quizId].questions.map(q=>q.id);
+    const savedOrderIsCurrent = Array.isArray(s.order) &&
+      s.order.length === currentQuestionIds.length &&
+      currentQuestionIds.every(id=>s.order.includes(id));
+    if(!savedOrderIsCurrent) s.order = currentQuestionIds;
     if(!s.choiceOrder) s.choiceOrder = {};
     if(!s.responses) s.responses = {};
     if(!s.bookmarks) s.bookmarks = {};
